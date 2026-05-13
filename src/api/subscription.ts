@@ -11,6 +11,8 @@ import type {
   PurchaseSelection,
   PurchasePreview,
   AppConfig,
+  LteTrafficInfo,
+  LteTrafficPackage,
 } from '../types';
 
 /** Helper: build query params with optional subscription_id */
@@ -139,6 +141,36 @@ export const subscriptionApi = {
     );
   },
 
+  getLteTrafficPackage: async (subscriptionId?: number): Promise<LteTrafficPackage> => {
+    const response = await apiClient.get<LteTrafficPackage>(
+      '/cabinet/subscription/lte-traffic-package',
+      withSubId(subscriptionId),
+    );
+    return response.data;
+  },
+
+  purchaseLteTraffic: async (
+    subscriptionId?: number,
+  ): Promise<{
+    success: boolean;
+    message: string;
+    gb_added: number;
+    amount_paid_kopeks: number;
+    new_balance_kopeks: number;
+    lte_traffic?: LteTrafficInfo | null;
+  }> => {
+    const response = await apiClient.post(
+      '/cabinet/subscription/lte-traffic',
+      {},
+      withSubId(subscriptionId),
+    );
+    return response.data;
+  },
+
+  saveLteTrafficCart: async (subscriptionId?: number): Promise<void> => {
+    await apiClient.post('/cabinet/subscription/lte-traffic/save-cart', {}, withSubId(subscriptionId));
+  },
+
   refreshTraffic: async (
     subscriptionId?: number,
   ): Promise<{
@@ -155,6 +187,7 @@ export const subscriptionApi = {
     is_unlimited: boolean;
     lifetime_used_bytes?: number;
     lifetime_used_gb?: number;
+    lte_traffic?: LteTrafficInfo | null;
   }> => {
     const response = await apiClient.post(
       '/cabinet/subscription/refresh-traffic',

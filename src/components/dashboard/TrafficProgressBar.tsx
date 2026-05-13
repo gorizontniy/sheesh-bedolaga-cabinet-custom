@@ -29,7 +29,8 @@ export default function TrafficProgressBar({
 
   // Gradient always starts from the accent color (normal zone)
   const startColor = 'rgb(var(--color-accent-400))';
-  const clampedPercent = Math.min(percent, 100);
+  const clampedPercent = Math.min(Math.max(percent, 0), 100);
+  const visualPercent = clampedPercent > 0 && clampedPercent < 1 ? 1 : clampedPercent;
   const barHeight = compact ? 8 : 14;
 
   // Multi-segment gradient matching prototype
@@ -117,7 +118,8 @@ export default function TrafficProgressBar({
         <div
           className="absolute bottom-0 left-0 top-0 overflow-hidden"
           style={{
-            width: `${clampedPercent}%`,
+            width: `${visualPercent}%`,
+            minWidth: clampedPercent > 0 ? barHeight : 0,
             borderRadius: 10,
             transition: 'width 1.2s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
@@ -166,13 +168,13 @@ export default function TrafficProgressBar({
         ))}
 
         {/* Glow at fill edge */}
-        {clampedPercent > 2 && (
+        {clampedPercent > 0 && (
           <div
             className="pointer-events-none absolute"
             style={{
               top: -4,
               bottom: -4,
-              left: `calc(${clampedPercent}% - 8px)`,
+              left: `calc(${visualPercent}% - 8px)`,
               width: 16,
               borderRadius: '50%',
               background: `radial-gradient(circle, rgba(${zone.mainVarRaw}, 0.38), transparent)`,

@@ -21,6 +21,7 @@ import { promoApi } from '../api/promo';
 import PendingGiftCard from '../components/dashboard/PendingGiftCard';
 import SubscriptionListCard from '../components/subscription/SubscriptionListCard';
 import { API } from '../config/constants';
+import type { LteTrafficInfo } from '../types';
 
 const ChevronRightIcon = () => (
   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -132,6 +133,7 @@ export default function Dashboard() {
     traffic_used_gb: number;
     traffic_used_percent: number;
     is_unlimited: boolean;
+    lte_traffic?: LteTrafficInfo | null;
   } | null>(null);
 
   const refreshTrafficMutation = useMutation({
@@ -141,6 +143,7 @@ export default function Dashboard() {
         traffic_used_gb: data.traffic_used_gb,
         traffic_used_percent: data.traffic_used_percent,
         is_unlimited: data.is_unlimited,
+        lte_traffic: data.lte_traffic ?? null,
       });
       localStorage.setItem(
         `traffic_refresh_ts_${subscription?.id ?? 'default'}`,

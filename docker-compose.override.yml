@@ -1,0 +1,18 @@
+services:
+  cabinet-frontend:
+    container_name: bedolaga_cabinet_frontend
+    ports: !override
+      - '127.0.0.1:13020:80'
+    healthcheck:
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://127.0.0.1:80/']
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    networks:
+      - remnawave-network
+
+networks:
+  remnawave-network:
+    external: true
+    name: remnawave-network

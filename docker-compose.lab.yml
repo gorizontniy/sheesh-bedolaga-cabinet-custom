@@ -1,0 +1,33 @@
+services:
+  cabinet-frontend-lab:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: /api
+        VITE_TELEGRAM_BOT_USERNAME: internet_free_test_bot
+        VITE_APP_NAME: Internet FREE
+        VITE_APP_LOGO: IF
+    image: bedolaga-cabinet-lab-frontend:latest
+    container_name: bedolaga_cabinet_lab_frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: /api
+      VITE_TELEGRAM_BOT_USERNAME: internet_free_test_bot
+      VITE_APP_NAME: Internet FREE
+      VITE_APP_LOGO: IF
+    ports:
+      - '127.0.0.1:13021:80'
+    healthcheck:
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://127.0.0.1:80/']
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    networks:
+      - remnawave-network
+
+networks:
+  remnawave-network:
+    external: true
+    name: remnawave-network

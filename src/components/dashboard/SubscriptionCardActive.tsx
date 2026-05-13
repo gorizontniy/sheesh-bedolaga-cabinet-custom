@@ -11,7 +11,7 @@ import { formatTraffic } from '../../utils/formatTraffic';
 import { getGlassColors } from '../../utils/glassTheme';
 import { HoverBorderGradient } from '../ui/hover-border-gradient';
 import { useHaptic } from '../../platform';
-import type { Subscription } from '../../types';
+import type { LteTrafficInfo, Subscription } from '../../types';
 
 interface SubscriptionCardActiveProps {
   subscription: Subscription;
@@ -19,6 +19,7 @@ interface SubscriptionCardActiveProps {
     traffic_used_gb: number;
     traffic_used_percent: number;
     is_unlimited: boolean;
+    lte_traffic?: LteTrafficInfo | null;
   } | null;
   refreshTrafficMutation: UseMutationResult<unknown, unknown, void, unknown>;
   trafficRefreshCooldown: number;
@@ -57,6 +58,11 @@ export default function SubscriptionCardActive({
   const usedPercent = trafficData?.traffic_used_percent ?? subscription.traffic_used_percent;
   const usedGb = trafficData?.traffic_used_gb ?? subscription.traffic_used_gb;
   const isUnlimited = trafficData?.is_unlimited ?? subscription.traffic_limit_gb === 0;
+  const lteTraffic = trafficData?.lte_traffic ?? subscription.lte_traffic ?? null;
+  const lteUsedGb = lteTraffic?.traffic_used_gb ?? 0;
+  const lteLimitGb = lteTraffic?.traffic_limit_gb ?? 50;
+  const ltePercent = lteTraffic?.traffic_used_percent ?? 0;
+  const lteIsUnlimited = lteTraffic?.is_unlimited ?? lteLimitGb === 0;
   const zone = useTrafficZone(usedPercent);
   const animatedPercent = useAnimatedNumber(usedPercent);
   const haptic = useHaptic();
@@ -182,7 +188,7 @@ export default function SubscriptionCardActive({
           ) : (
             <>
               <div className="font-display text-[38px] font-extrabold leading-none tracking-tight text-dark-50">
-                {animatedPercent.toFixed(0)}
+                {usedPercent > 0 && usedPercent < 1 ? '<1' : animatedPercent.toFixed(0)}
                 <span className="ml-px text-lg font-medium text-dark-50/35">%</span>
               </div>
               <div className="mt-0.5 font-mono text-[11px] text-dark-50/30">
@@ -202,6 +208,43 @@ export default function SubscriptionCardActive({
           isUnlimited={isUnlimited}
         />
       </div>
+
+      {lteTraffic && (
+        <div
+          className="mb-6 rounded-[14px] p-3.5"
+          style={{
+            background: g.innerBg,
+            border: `1px solid ${g.innerBorder}`,
+          }}
+        >
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-dark-50/45">
+              LTE/WL трафик
+            </span>
+            <span className="shrink-0 font-mono text-[11px] text-dark-50/35">
+              {lteIsUnlimited
+                ? formatTraffic(lteUsedGb)
+                : `${formatTraffic(lteUsedGb)} / ${formatTraffic(lteLimitGb)}`}
+            </span>
+          </div>
+          <TrafficProgressBar
+            usedGb={lteUsedGb}
+            limitGb={lteLimitGb}
+            percent={ltePercent}
+            isUnlimited={lteIsUnlimited}
+            compact
+          />
+          <Link
+            to={`/subscriptions/${subscription.id}`}
+            className="mt-3 block rounded-xl border border-accent-400/20 bg-accent-400/10 px-3 py-2 text-center text-[12px] font-semibold text-accent-300 transition-colors hover:bg-accent-400/15"
+          >
+            Докупить LTE/WL
+          </Link>
+          <div className="mt-2 text-[10px] leading-snug text-dark-50/28">
+            DE LTE и WL RU считаются отдельно как LTE
+          </div>
+        </div>
+      )}
 
       {/* ─── Connect Device Button ─── */}
       {subscription.subscription_url && (

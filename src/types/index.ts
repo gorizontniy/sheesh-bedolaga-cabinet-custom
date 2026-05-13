@@ -69,6 +69,33 @@ export interface TrafficPurchase {
   progress_percent: number;
 }
 
+export interface LteTrafficInfo {
+  traffic_used_bytes: number;
+  raw_traffic_used_bytes?: number;
+  traffic_used_gb: number;
+  traffic_limit_gb: number;
+  traffic_used_percent: number;
+  base_limit_gb?: number;
+  purchased_traffic_gb?: number;
+  package_gb?: number;
+  package_price_kopeks?: number;
+  package_price_rubles?: number;
+  billing_multiplier?: number;
+  is_unlimited: boolean;
+  node_name: string | null;
+  updated_at: string | null;
+}
+
+export interface LteTrafficPackage {
+  gb: number;
+  price_kopeks: number;
+  price_rubles: number;
+  current_limit_gb: number;
+  base_limit_gb: number;
+  purchased_traffic_gb: number;
+  expires_at: string | null;
+}
+
 export interface Subscription {
   id: number;
   status: string;
@@ -82,6 +109,7 @@ export interface Subscription {
   traffic_limit_gb: number;
   traffic_used_gb: number;
   traffic_used_percent: number;
+  lte_traffic?: LteTrafficInfo | null;
   device_limit: number;
   connected_squads: string[];
   servers: ServerInfo[];
