@@ -211,8 +211,44 @@ interface NodeCardProps {
   isLoading: boolean;
 }
 
+type NodeServiceBadge = {
+  label: string;
+  tone: 'auto' | 'lte' | 'mws' | 'wl';
+};
+
+const CLOUDRIX_ENTRY_IP = '138.124.254.3';
+
+const nodeServiceToneClasses: Record<NodeServiceBadge['tone'], string> = {
+  auto: 'border-violet-500/30 bg-violet-500/10 text-violet-300',
+  lte: 'border-warning-500/30 bg-warning-500/10 text-warning-300',
+  mws: 'border-cyan-500/30 bg-cyan-500/10 text-cyan-300',
+  wl: 'border-success-500/30 bg-success-500/10 text-success-300',
+};
+
+function getNodeServiceBadges(node: NodeStatus): NodeServiceBadge[] {
+  const normalizedName = node.name.toLowerCase();
+  const normalizedAddress = node.address.toLowerCase();
+  const isCloudrixEntry =
+    normalizedAddress === CLOUDRIX_ENTRY_IP ||
+    normalizedName.includes('cloudrix') ||
+    normalizedName.includes('lte/wl') ||
+    normalizedName.includes('mws');
+
+  if (!isCloudrixEntry) {
+    return [];
+  }
+
+  return [
+    { label: 'DE LTE', tone: 'lte' },
+    { label: 'WL RU 0 MWS', tone: 'mws' },
+    { label: 'WL RU 1/2/3', tone: 'wl' },
+    { label: 'WL AUTOBALANCER', tone: 'auto' },
+  ];
+}
+
 function NodeCard({ node, onRestart, onToggle, isLoading }: NodeCardProps) {
   const { t } = useTranslation();
+  const serviceBadges = getNodeServiceBadges(node);
 
   const getStatusColor = () => {
     if (node.is_disabled) return 'bg-dark-600 text-dark-400';
@@ -253,6 +289,19 @@ function NodeCard({ node, onRestart, onToggle, isLoading }: NodeCardProps) {
           {getStatusText()}
         </span>
       </div>
+
+      {serviceBadges.length > 0 && (
+        <div className="mb-3 flex flex-wrap gap-1.5">
+          {serviceBadges.map((badge) => (
+            <span
+              key={badge.label}
+              className={`rounded-md border px-2 py-1 text-[11px] font-medium ${nodeServiceToneClasses[badge.tone]}`}
+            >
+              {badge.label}
+            </span>
+          ))}
+        </div>
+      )}
 
       {/* Xray Version & Uptime */}
       {(node.versions?.xray || node.xray_uptime > 0) && (
