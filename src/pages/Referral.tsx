@@ -250,6 +250,30 @@ export default function Referral() {
     window.open(telegramUrl, '_blank', 'noopener,noreferrer');
   };
 
+  const shareBotLink = () => {
+    if (!botReferralLink) return;
+    const shareText = t('referral.shareMessage', {
+      percent: info?.commission_percent || 0,
+      botName: branding?.name || import.meta.env.VITE_APP_NAME || 'Cabinet',
+    });
+
+    if (navigator.share) {
+      navigator
+        .share({
+          title: t('referral.title'),
+          text: shareText,
+          url: botReferralLink,
+        })
+        .catch(() => {});
+      return;
+    }
+
+    const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(
+      botReferralLink,
+    )}&text=${encodeURIComponent(shareText)}`;
+    window.open(telegramUrl, '_blank', 'noopener,noreferrer');
+  };
+
   if (isLoading) {
     return (
       <div className="flex min-h-64 items-center justify-center">
@@ -336,17 +360,29 @@ export default function Referral() {
                   value={botReferralLink}
                   className="input flex-1 text-sm"
                 />
-                <button
-                  onClick={() => copyLink(botReferralLink, 'bot')}
-                  className={`btn-primary shrink-0 px-4 ${
-                    copiedLink === 'bot' ? 'bg-success-500 hover:bg-success-500' : ''
-                  }`}
-                >
-                  {copiedLink === 'bot' ? <CheckIcon /> : <CopyIcon />}
-                  <span className="ml-2">
-                    {copiedLink === 'bot' ? t('referral.copied') : t('referral.copyLink')}
-                  </span>
-                </button>
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                  <button
+                    onClick={() => copyLink(botReferralLink, 'bot')}
+                    className={`btn-primary w-full shrink-0 px-4 sm:w-auto ${
+                      copiedLink === 'bot' ? 'bg-success-500 hover:bg-success-500' : ''
+                    }`}
+                  >
+                    {copiedLink === 'bot' ? <CheckIcon /> : <CopyIcon />}
+                    <span className="ml-2">
+                      {copiedLink === 'bot' ? t('referral.copied') : t('referral.copyLink')}
+                    </span>
+                  </button>
+                  <button
+                    onClick={shareBotLink}
+                    disabled={!botReferralLink}
+                    className={`btn-secondary flex w-full shrink-0 items-center px-4 sm:w-auto ${
+                      !botReferralLink ? 'cursor-not-allowed opacity-50' : ''
+                    }`}
+                  >
+                    <ShareIcon />
+                    <span className="ml-2">{t('referral.shareButton')}</span>
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -370,11 +406,11 @@ export default function Referral() {
             </div>
             <div className="flex flex-col gap-2 sm:flex-row">
               <input type="text" readOnly value={referralLink} className="input flex-1 text-sm" />
-              <div className="flex gap-2">
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
                 <button
                   onClick={() => copyLink(referralLink, 'cabinet')}
                   disabled={!referralLink}
-                  className={`btn-primary shrink-0 px-4 ${
+                  className={`btn-primary w-full shrink-0 px-4 sm:w-auto ${
                     copiedLink === 'cabinet' ? 'bg-success-500 hover:bg-success-500' : ''
                   } ${!referralLink ? 'cursor-not-allowed opacity-50' : ''}`}
                 >
@@ -386,7 +422,7 @@ export default function Referral() {
                 <button
                   onClick={shareLink}
                   disabled={!referralLink}
-                  className={`btn-secondary flex shrink-0 items-center px-4 ${
+                  className={`btn-secondary flex w-full shrink-0 items-center px-4 sm:w-auto ${
                     !referralLink ? 'cursor-not-allowed opacity-50' : ''
                   }`}
                 >
