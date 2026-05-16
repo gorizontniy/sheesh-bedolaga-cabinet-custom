@@ -110,6 +110,7 @@ export default function Login() {
     staleTime: 60000,
   });
   const isEmailAuthEnabled = emailAuthConfig?.enabled ?? true;
+  const isEmailVerificationEnabled = emailAuthConfig?.verification_enabled ?? true;
 
   // Fetch enabled OAuth providers
   const { data: oauthData } = useQuery({
@@ -256,8 +257,13 @@ export default function Login() {
           firstName || undefined,
           referralCode || undefined,
         );
-        // Show "check your email" screen
-        setRegisteredEmail(result.email);
+
+        if (result.requires_verification) {
+          setRegisteredEmail(result.email);
+        } else {
+          await loginWithEmail(email, password);
+          navigate(getReturnUrl(), { replace: true });
+        }
       }
     } catch (err: unknown) {
       const error = err as { response?: { status?: number; data?: { detail?: string } } };
@@ -769,7 +775,7 @@ export default function Login() {
                             </button>
                           </form>
 
-                          {authMode === 'register' && (
+                          {authMode === 'register' && isEmailVerificationEnabled && (
                             <p className="text-center text-xs text-dark-500">
                               {t(
                                 'auth.verificationEmailNotice',
