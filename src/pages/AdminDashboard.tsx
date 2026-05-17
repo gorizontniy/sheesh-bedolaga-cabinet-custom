@@ -213,37 +213,69 @@ interface NodeCardProps {
 
 type NodeServiceBadge = {
   label: string;
-  tone: 'auto' | 'lte' | 'mws' | 'wl';
+  tone: 'auto' | 'bridge' | 'direct' | 'mws' | 'service' | 'smart' | 'standby' | 'wl';
 };
 
 const CLOUDRIX_ENTRY_IP = '138.124.254.3';
+const RELAY_ENTRY_IP = '2.26.119.188';
 
 const nodeServiceToneClasses: Record<NodeServiceBadge['tone'], string> = {
   auto: 'border-violet-500/30 bg-violet-500/10 text-violet-300',
-  lte: 'border-warning-500/30 bg-warning-500/10 text-warning-300',
+  bridge: 'border-sky-500/30 bg-sky-500/10 text-sky-300',
+  direct: 'border-warning-500/30 bg-warning-500/10 text-warning-300',
   mws: 'border-cyan-500/30 bg-cyan-500/10 text-cyan-300',
+  service: 'border-dark-500/50 bg-dark-600/25 text-dark-300',
+  smart: 'border-blue-500/30 bg-blue-500/10 text-blue-300',
+  standby: 'border-dark-500/50 bg-dark-700/40 text-dark-400',
   wl: 'border-success-500/30 bg-success-500/10 text-success-300',
 };
 
 function getNodeServiceBadges(node: NodeStatus): NodeServiceBadge[] {
   const normalizedName = node.name.toLowerCase();
   const normalizedAddress = node.address.toLowerCase();
+  const isRelayEntry = normalizedAddress === RELAY_ENTRY_IP || normalizedName.includes('relay-lab');
   const isCloudrixEntry =
     normalizedAddress === CLOUDRIX_ENTRY_IP ||
     normalizedName.includes('cloudrix') ||
     normalizedName.includes('lte/wl') ||
     normalizedName.includes('mws');
+  const isLteBridge = normalizedName.includes('lte-primary') || normalizedAddress.includes('lte.sheesh.space');
+  const isSmartBridge = normalizedName.includes('smart-primary') || normalizedAddress.includes('smart2.sheesh.space');
 
-  if (!isCloudrixEntry) {
-    return [];
+  if (isRelayEntry) {
+    return [
+      { label: 'DE LTE', tone: 'direct' },
+      { label: 'DE SMART', tone: 'smart' },
+      { label: 'RU RELAY', tone: 'bridge' },
+    ];
   }
 
-  return [
-    { label: 'DE LTE', tone: 'lte' },
-    { label: 'WL RU 0 MWS', tone: 'mws' },
-    { label: 'WL RU 1/2/3', tone: 'wl' },
-    { label: 'WL AUTOBALANCER', tone: 'auto' },
-  ];
+  if (isCloudrixEntry) {
+    return [
+      { label: 'WL RU 0 MWS', tone: 'mws' },
+      { label: 'WL RU 1', tone: 'wl' },
+      { label: 'WL RU 2/3 STANDBY', tone: 'standby' },
+      { label: 'WL AUTOBALANCER', tone: 'auto' },
+    ];
+  }
+
+  if (isLteBridge) {
+    return [
+      { label: 'LTE BRIDGE', tone: 'bridge' },
+      { label: 'EU EXIT', tone: 'direct' },
+      { label: 'SERVICE ONLY', tone: 'service' },
+    ];
+  }
+
+  if (isSmartBridge) {
+    return [
+      { label: 'SMART BRIDGE', tone: 'smart' },
+      { label: 'EU EXIT', tone: 'direct' },
+      { label: 'SERVICE ONLY', tone: 'service' },
+    ];
+  }
+
+  return [{ label: 'SERVICE NODE', tone: 'service' }];
 }
 
 function NodeCard({ node, onRestart, onToggle, isLoading }: NodeCardProps) {

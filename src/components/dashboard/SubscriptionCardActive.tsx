@@ -241,7 +241,7 @@ export default function SubscriptionCardActive({
             Докупить LTE/WL
           </Link>
           <div className="mt-2 text-[10px] leading-snug text-dark-50/28">
-            DE LTE и WL RU считаются отдельно как LTE
+            WL RU 0/1 считаются как LTE/WL; DE LTE и DE SMART идут напрямую
           </div>
         </div>
       )}

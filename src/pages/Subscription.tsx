@@ -28,6 +28,40 @@ import {
 import Twemoji from 'react-twemoji';
 import type { LteTrafficInfo } from '../types';
 
+type SubscriptionLocationBadge = {
+  key: string;
+  name: string;
+  countryCode: string | null;
+};
+
+const SMART_RELAY_SQUAD_UUID = 'b4528673-bac5-427f-b2e0-6b5e4cf22416';
+const LTE_RELAY_SQUAD_UUID = 'f1c6f786-0c75-4362-a285-47798e758541';
+
+function getSubscriptionLocationBadges(server: {
+  uuid: string;
+  name: string;
+  country_code: string | null;
+}): SubscriptionLocationBadge[] {
+  const uuid = server.uuid.toLowerCase();
+  const normalizedName = server.name.toLowerCase();
+
+  if (uuid === SMART_RELAY_SQUAD_UUID || normalizedName.includes('smart #1')) {
+    return [{ key: `${server.uuid}:de-smart`, name: 'DE SMART', countryCode: 'DE' }];
+  }
+
+  if (uuid === LTE_RELAY_SQUAD_UUID || normalizedName.includes('lte #1')) {
+    return [
+      { key: `${server.uuid}:de-lte`, name: 'DE LTE', countryCode: 'DE' },
+      { key: `${server.uuid}:wl-ru-0`, name: 'WL RU 0 MWS', countryCode: 'RU' },
+      { key: `${server.uuid}:wl-ru-1`, name: 'WL RU 1', countryCode: 'RU' },
+      { key: `${server.uuid}:wl-auto`, name: 'WL AUTOBALANCER', countryCode: 'RU' },
+    ];
+  }
+
+  return [{ key: server.uuid, name: server.name, countryCode: server.country_code }];
+}
+
+
 /** Isolated countdown so 1s interval doesn't re-render the whole page */
 const CountdownTimer = memo(function CountdownTimer({
   endDate,
@@ -971,7 +1005,7 @@ export default function Subscription() {
                     {formatPrice(lteTraffic.package_price_kopeks ?? 25_000)}
                   </button>
                   <div className="mt-2 text-[10px] leading-snug text-dark-50/28">
-                    DE LTE и WL RU считаются отдельно как LTE
+                    WL RU 0/1 считаются как LTE/WL; DE LTE и DE SMART идут напрямую
                   </div>
                 </div>
               )}
@@ -1120,20 +1154,20 @@ export default function Subscription() {
                     {t('subscription.locationsLabel')}
                   </div>
                   <div className="flex flex-wrap gap-1.5">
-                    {subscription.servers.map((server) => (
+                    {subscription.servers.flatMap(getSubscriptionLocationBadges).map((location) => (
                       <span
-                        key={server.uuid}
+                        key={location.key}
                         className="inline-flex items-center gap-1.5 rounded-[8px] px-2.5 py-1 text-[11px] font-medium text-dark-50/50"
                         style={{
                           background: g.innerBorder,
                           border: `1px solid ${g.trackBg}`,
                         }}
                       >
-                        {server.country_code && (
-                          <span className="text-xs">{getFlagEmoji(server.country_code)}</span>
+                        {location.countryCode && (
+                          <span className="text-xs">{getFlagEmoji(location.countryCode)}</span>
                         )}
                         <Twemoji options={{ className: 'twemoji', folder: 'svg', ext: '.svg' }}>
-                          {server.name}
+                          {location.name}
                         </Twemoji>
                       </span>
                     ))}
