@@ -52,7 +52,7 @@ function getSubscriptionLocationBadges(server: {
   if (uuid === LTE_RELAY_SQUAD_UUID || normalizedName.includes('lte #1')) {
     return [
       { key: `${server.uuid}:de-lte`, name: 'DE LTE', countryCode: 'DE' },
-      { key: `${server.uuid}:wl-ru-0`, name: 'WL RU 0 MWS', countryCode: 'RU' },
+      { key: `${server.uuid}:wl-ru-0`, name: 'WL RU 0', countryCode: 'RU' },
       { key: `${server.uuid}:wl-ru-1`, name: 'WL RU 1', countryCode: 'RU' },
       { key: `${server.uuid}:wl-auto`, name: 'WL AUTOBALANCER', countryCode: 'RU' },
     ];
@@ -1164,11 +1164,11 @@ export default function Subscription() {
                         }}
                       >
                         {location.countryCode && (
-                          <span className="text-xs">{getFlagEmoji(location.countryCode)}</span>
+                          <Twemoji options={{ className: 'twemoji', folder: 'svg', ext: '.svg' }}>
+                            <span className="text-xs leading-none">{getFlagEmoji(location.countryCode)}</span>
+                          </Twemoji>
                         )}
-                        <Twemoji options={{ className: 'twemoji', folder: 'svg', ext: '.svg' }}>
-                          {location.name}
-                        </Twemoji>
+                        <span>{location.name}</span>
                       </span>
                     ))}
                   </div>
