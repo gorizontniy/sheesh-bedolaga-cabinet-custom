@@ -219,7 +219,7 @@ export default function SubscriptionCardActive({
         >
           <div className="mb-2 flex items-center justify-between gap-3">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-dark-50/45">
-              LTE/WL трафик
+              LTE трафик
             </span>
             <span className="shrink-0 font-mono text-[11px] text-dark-50/35">
               {lteIsUnlimited
@@ -238,10 +238,10 @@ export default function SubscriptionCardActive({
             to={`/subscriptions/${subscription.id}`}
             className="mt-3 block rounded-xl border border-accent-400/20 bg-accent-400/10 px-3 py-2 text-center text-[12px] font-semibold text-accent-300 transition-colors hover:bg-accent-400/15"
           >
-            Докупить LTE/WL
+            Докупить LTE
           </Link>
           <div className="mt-2 text-[10px] leading-snug text-dark-50/28">
-            WL RU 0/1 считаются как LTE/WL; DE LTE и DE SMART идут напрямую
+            DE LTE и WL сервера считаются как LTE
           </div>
         </div>
       )}

@@ -981,7 +981,7 @@ export default function Subscription() {
                 >
                   <div className="mb-2 flex items-center justify-between gap-3">
                     <span className="text-[11px] font-semibold uppercase tracking-wider text-dark-50/45">
-                      LTE/WL трафик
+                      LTE трафик
                     </span>
                     <span className="shrink-0 font-mono text-[11px] text-dark-50/35">
                       {lteIsUnlimited
@@ -1001,11 +1001,11 @@ export default function Subscription() {
                     onClick={() => setShowLteTrafficTopup(true)}
                     className="mt-3 w-full rounded-xl border border-accent-400/20 bg-accent-400/10 px-3 py-2 text-[12px] font-semibold text-accent-300 transition-colors hover:bg-accent-400/15"
                   >
-                    Докупить LTE/WL: {lteTraffic.package_gb ?? 0} ГБ за{' '}
+                    Докупить LTE: {lteTraffic.package_gb ?? 0} ГБ за{' '}
                     {formatPrice(lteTraffic.package_price_kopeks ?? 25_000)}
                   </button>
                   <div className="mt-2 text-[10px] leading-snug text-dark-50/28">
-                    WL RU 0/1 считаются как LTE/WL; DE LTE и DE SMART идут напрямую
+                    DE LTE и WL сервера считаются как LTE
                   </div>
                 </div>
               )}
@@ -2159,9 +2159,9 @@ export default function Subscription() {
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <div className="font-medium text-dark-100">Докупить LTE/WL трафик</div>
+                        <div className="font-medium text-dark-100">Докупить LTE трафик</div>
                         <div className="mt-1 text-sm text-dark-400">
-                          LTE/WL: {formatTraffic(currentLteTraffic.traffic_used_gb)} /{' '}
+                          LTE: {formatTraffic(currentLteTraffic.traffic_used_gb)} /{' '}
                           {formatTraffic(currentLteTraffic.traffic_limit_gb)}
                         </div>
                       </div>
@@ -2181,7 +2181,7 @@ export default function Subscription() {
                     className={`rounded-xl border p-5 ${isDark ? 'border-dark-700/50 bg-dark-800/50' : 'border-champagne-300/60 bg-champagne-200/40'}`}
                   >
                     <div className="mb-4 flex items-center justify-between">
-                      <h3 className="font-medium text-dark-100">LTE/WL пакет</h3>
+                      <h3 className="font-medium text-dark-100">LTE пакет</h3>
                       <button
                         onClick={() => setShowLteTrafficTopup(false)}
                         className="text-sm text-dark-400 hover:text-dark-200"
@@ -2207,7 +2207,7 @@ export default function Subscription() {
                         <div className="space-y-4">
                           <div className="rounded-xl border border-accent-400/20 bg-accent-400/10 p-4 text-center">
                             <div className="text-lg font-semibold text-dark-100">
-                              +{packageGb} ГБ LTE/WL
+                              +{packageGb} ГБ LTE
                             </div>
                             <div className="mt-1 text-sm text-dark-400">
                               Текущий лимит:{' '}
@@ -2241,7 +2241,7 @@ export default function Subscription() {
                                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                               </span>
                             ) : (
-                              `Докупить ${packageGb} ГБ LTE/WL`
+                              `Докупить ${packageGb} ГБ LTE`
                             )}
                           </button>
 
