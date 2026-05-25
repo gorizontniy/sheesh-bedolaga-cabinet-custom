@@ -69,6 +69,12 @@ export interface TrafficPurchase {
   progress_percent: number;
 }
 
+export interface LteTrafficPackageOption {
+  gb: number;
+  price_kopeks: number;
+  price_rubles: number;
+}
+
 export interface LteTrafficInfo {
   traffic_used_bytes: number;
   raw_traffic_used_bytes?: number;
@@ -80,6 +86,7 @@ export interface LteTrafficInfo {
   package_gb?: number;
   package_price_kopeks?: number;
   package_price_rubles?: number;
+  available_packages?: LteTrafficPackageOption[];
   billing_multiplier?: number;
   is_unlimited: boolean;
   node_name: string | null;
@@ -94,6 +101,7 @@ export interface LteTrafficPackage {
   base_limit_gb: number;
   purchased_traffic_gb: number;
   expires_at: string | null;
+  packages: LteTrafficPackageOption[];
 }
 
 export interface Subscription {

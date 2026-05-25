@@ -110,6 +110,7 @@ export interface RenewalsStats {
 // ============ Add-ons ============
 
 export interface AddonByPackageItem {
+  kind?: 'traffic' | 'lte';
   traffic_gb: number;
   count: number;
 }

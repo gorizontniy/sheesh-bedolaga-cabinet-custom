@@ -150,6 +150,7 @@ export const subscriptionApi = {
   },
 
   purchaseLteTraffic: async (
+    gb: number,
     subscriptionId?: number,
   ): Promise<{
     success: boolean;
@@ -161,14 +162,16 @@ export const subscriptionApi = {
   }> => {
     const response = await apiClient.post(
       '/cabinet/subscription/lte-traffic',
-      {},
-      withSubId(subscriptionId),
+      ...bodyWithSubId({ gb }, subscriptionId),
     );
     return response.data;
   },
 
-  saveLteTrafficCart: async (subscriptionId?: number): Promise<void> => {
-    await apiClient.post('/cabinet/subscription/lte-traffic/save-cart', {}, withSubId(subscriptionId));
+  saveLteTrafficCart: async (trafficGb: number, subscriptionId?: number): Promise<void> => {
+    await apiClient.post(
+      '/cabinet/subscription/lte-traffic/save-cart',
+      ...bodyWithSubId({ gb: trafficGb }, subscriptionId),
+    );
   },
 
   refreshTraffic: async (

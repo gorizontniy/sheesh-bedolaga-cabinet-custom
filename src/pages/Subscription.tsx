@@ -46,7 +46,10 @@ function getSubscriptionLocationBadges(server: {
   const normalizedName = server.name.toLowerCase();
 
   if (uuid === SMART_RELAY_SQUAD_UUID || normalizedName.includes('smart #1')) {
-    return [{ key: `${server.uuid}:de-smart`, name: 'DE SMART', countryCode: 'DE' }];
+    return [
+      { key: 'profile:auto', name: 'AUTO', countryCode: null },
+      { key: `${server.uuid}:de-smart`, name: 'DE SMART', countryCode: 'DE' },
+    ];
   }
 
   if (uuid === LTE_RELAY_SQUAD_UUID || normalizedName.includes('lte #1')) {
@@ -56,6 +59,10 @@ function getSubscriptionLocationBadges(server: {
       { key: `${server.uuid}:wl-ru-1`, name: 'WL RU 1', countryCode: 'RU' },
       { key: `${server.uuid}:wl-auto`, name: 'WL AUTOBALANCER', countryCode: 'RU' },
     ];
+  }
+
+  if (normalizedName.includes('test') || normalizedName.includes('bg msc')) {
+    return [];
   }
 
   return [{ key: server.uuid, name: server.name, countryCode: server.country_code }];
@@ -234,8 +241,16 @@ export default function Subscription() {
   const [showTrafficTopup, setShowTrafficTopup] = useState(false);
   const [showLteTrafficTopup, setShowLteTrafficTopup] = useState(false);
   const [selectedTrafficPackage, setSelectedTrafficPackage] = useState<number | null>(null);
+  const [selectedLteTrafficGb, setSelectedLteTrafficGb] = useState<number | null>(null);
   const [showServerManagement, setShowServerManagement] = useState(false);
   const [selectedServersToUpdate, setSelectedServersToUpdate] = useState<string[]>([]);
+  const lteTrafficTopupRef = useRef<HTMLDivElement | null>(null);
+  const openLteTrafficTopup = useCallback(() => {
+    setShowLteTrafficTopup(true);
+    window.setTimeout(() => {
+      lteTrafficTopupRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 0);
+  }, []);
 
   // Traffic refresh state
   const [trafficRefreshCooldown, setTrafficRefreshCooldown] = useState(0);
@@ -456,6 +471,18 @@ export default function Subscription() {
     enabled: showLteTrafficTopup && !!subscription,
   });
 
+  // lte-package-default-selection
+  useEffect(() => {
+    const packages = lteTrafficPackage?.packages ?? currentLteTraffic?.available_packages ?? [];
+    if (packages.length === 0) {
+      setSelectedLteTrafficGb(null);
+      return;
+    }
+    if (!packages.some((pkg) => pkg.gb === selectedLteTrafficGb)) {
+      setSelectedLteTrafficGb(packages[0].gb);
+    }
+  }, [lteTrafficPackage, currentLteTraffic, selectedLteTrafficGb]);
+
   // Traffic purchase mutation
   const trafficPurchaseMutation = useMutation({
     mutationFn: (gb: number) => subscriptionApi.purchaseTraffic(gb, subscriptionId),
@@ -470,7 +497,7 @@ export default function Subscription() {
   });
 
   const lteTrafficPurchaseMutation = useMutation({
-    mutationFn: () => subscriptionApi.purchaseLteTraffic(subscriptionId),
+    mutationFn: (gb: number) => subscriptionApi.purchaseLteTraffic(gb, subscriptionId),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['subscription', subscriptionId] });
       queryClient.invalidateQueries({ queryKey: ['subscriptions-list'] });
@@ -691,6 +718,8 @@ export default function Subscription() {
           const lteLimitGb = lteTraffic?.traffic_limit_gb ?? 50;
           const ltePercent = lteTraffic?.traffic_used_percent ?? 0;
           const lteIsUnlimited = lteTraffic?.is_unlimited ?? lteLimitGb === 0;
+          const ltePreviewPackage = lteTraffic?.available_packages?.[0];
+          const lteHasTopupPackages = Boolean(ltePreviewPackage);
           const connectedDevices = devicesData?.total ?? 0;
           const isAtDeviceLimit =
             subscription.device_limit > 0 && connectedDevices >= subscription.device_limit;
@@ -996,14 +1025,15 @@ export default function Subscription() {
                     isUnlimited={lteIsUnlimited}
                     compact
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowLteTrafficTopup(true)}
-                    className="mt-3 w-full rounded-xl border border-accent-400/20 bg-accent-400/10 px-3 py-2 text-[12px] font-semibold text-accent-300 transition-colors hover:bg-accent-400/15"
-                  >
-                    Докупить LTE: {lteTraffic.package_gb ?? 0} ГБ за{' '}
-                    {formatPrice(lteTraffic.package_price_kopeks ?? 25_000)}
-                  </button>
+                  {lteHasTopupPackages && (
+                    <button
+                      type="button"
+                      onClick={openLteTrafficTopup}
+                      className="mt-3 w-full rounded-xl border border-accent-400/20 bg-accent-400/10 px-3 py-2 text-[12px] font-semibold text-accent-300 transition-colors hover:bg-accent-400/15"
+                    >
+                      {t('subscription.additionalOptions.buyLteTrafficShort')}
+                    </button>
+                  )}
                   <div className="mt-2 text-[10px] leading-snug text-dark-50/28">
                     DE LTE и WL сервера считаются как LTE
                   </div>
@@ -1154,7 +1184,13 @@ export default function Subscription() {
                     {t('subscription.locationsLabel')}
                   </div>
                   <div className="flex flex-wrap gap-1.5">
-                    {subscription.servers.flatMap(getSubscriptionLocationBadges).map((location) => (
+                    {Array.from(
+                      new Map(
+                        subscription.servers
+                          .flatMap(getSubscriptionLocationBadges)
+                          .map((location) => [location.key, location]),
+                      ).values(),
+                    ).map((location) => (
                       <span
                         key={location.key}
                         className="inline-flex items-center gap-1.5 rounded-[8px] px-2.5 py-1 text-[11px] font-medium text-dark-50/50"
@@ -2151,15 +2187,17 @@ export default function Subscription() {
 
             {/* Buy LTE/WL Traffic */}
             {currentLteTraffic && (
-              <div className="mt-4">
+              <div ref={lteTrafficTopupRef} className="mt-4">
                 {!showLteTrafficTopup ? (
                   <button
-                    onClick={() => setShowLteTrafficTopup(true)}
+                    onClick={openLteTrafficTopup}
                     className={`w-full rounded-xl border p-4 text-left transition-colors ${isDark ? 'border-dark-700/50 bg-dark-800/50 hover:border-dark-600' : 'border-champagne-300/60 bg-champagne-200/40 hover:border-champagne-400'}`}
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <div className="font-medium text-dark-100">Докупить LTE трафик</div>
+                        <div className="font-medium text-dark-100">
+                          {t('subscription.additionalOptions.buyLteTrafficShort')}
+                        </div>
                         <div className="mt-1 text-sm text-dark-400">
                           LTE: {formatTraffic(currentLteTraffic.traffic_used_gb)} /{' '}
                           {formatTraffic(currentLteTraffic.traffic_limit_gb)}
@@ -2179,24 +2217,34 @@ export default function Subscription() {
                 ) : (
                   <div
                     className={`rounded-xl border p-5 ${isDark ? 'border-dark-700/50 bg-dark-800/50' : 'border-champagne-300/60 bg-champagne-200/40'}`}
-                  >
-                    <div className="mb-4 flex items-center justify-between">
-                      <h3 className="font-medium text-dark-100">LTE пакет</h3>
+                    >
+                      <div className="mb-4 flex items-center justify-between">
+                      <h3 className="font-medium text-dark-100">
+                        {t('subscription.additionalOptions.buyLteTrafficTitle')}
+                      </h3>
                       <button
                         onClick={() => setShowLteTrafficTopup(false)}
                         className="text-sm text-dark-400 hover:text-dark-200"
                       >
-                        ×
+                        ✕
                       </button>
                     </div>
 
                     {(() => {
-                      const packageGb =
-                        lteTrafficPackage?.gb ?? currentLteTraffic.package_gb ?? 0;
-                      const packagePrice =
-                        lteTrafficPackage?.price_kopeks ??
-                        currentLteTraffic.package_price_kopeks ??
-                        25_000;
+                      const packageOptions = lteTrafficPackage?.packages ?? currentLteTraffic.available_packages ?? [];
+                      const selectedPackage =
+                        packageOptions.find((pkg) => pkg.gb === selectedLteTrafficGb) ??
+                        packageOptions[0] ??
+                        {
+                          gb: lteTrafficPackage?.gb ?? currentLteTraffic.package_gb ?? 0,
+                          price_kopeks:
+                            lteTrafficPackage?.price_kopeks ??
+                            currentLteTraffic.package_price_kopeks ??
+                            0,
+                        };
+                      const packageGb = selectedPackage.gb;
+                      const packagePrice = selectedPackage.price_kopeks;
+                      const hasAvailablePackage = packageOptions.length > 0 && packageGb > 0;
                       const hasEnoughBalance =
                         !purchaseOptions || packagePrice <= purchaseOptions.balance_kopeks;
                       const missingAmount = purchaseOptions
@@ -2205,35 +2253,51 @@ export default function Subscription() {
 
                       return (
                         <div className="space-y-4">
-                          <div className="rounded-xl border border-accent-400/20 bg-accent-400/10 p-4 text-center">
-                            <div className="text-lg font-semibold text-dark-100">
-                              +{packageGb} ГБ LTE
-                            </div>
-                            <div className="mt-1 text-sm text-dark-400">
-                              Текущий лимит:{' '}
-                              {formatTraffic(
-                                lteTrafficPackage?.current_limit_gb ??
-                                  currentLteTraffic.traffic_limit_gb,
-                              )}
-                            </div>
-                            <div className="mt-2 text-2xl font-bold text-accent-400">
-                              {formatPrice(packagePrice)}
-                            </div>
+                          <div
+                            className={`rounded-lg p-2 text-xs ${isDark ? 'bg-dark-700/30 text-dark-500' : 'bg-champagne-300/40 text-champagne-600'}`}
+                          >
+                            ⚠️ {t('subscription.additionalOptions.lteTrafficWarning')}
                           </div>
+
+                          {packageOptions.length > 0 && (
+                            <div className="grid grid-cols-2 gap-3" data-role="lte-package-choice-grid">
+                              {packageOptions.map((pkg) => (
+                                <button
+                                  key={pkg.gb}
+                                  type="button"
+                                  onClick={() => setSelectedLteTrafficGb(pkg.gb)}
+                                  className={`rounded-xl border p-4 text-center transition-all ${
+                                    packageGb === pkg.gb
+                                      ? 'border-accent-500 bg-accent-500/10'
+                                      : isDark
+                                        ? 'border-dark-700/50 bg-dark-800/50 hover:border-dark-600'
+                                        : 'border-champagne-300/60 bg-champagne-200/40 hover:border-champagne-400'
+                                  }`}
+                                >
+                                  <div className="text-lg font-semibold text-dark-100">
+                                    {pkg.gb} {t('common.units.gb')} LTE
+                                  </div>
+                                  <div className="font-medium text-accent-400">
+                                    {formatPrice(pkg.price_kopeks)}
+                                  </div>
+                                </button>
+                              ))}
+                            </div>
+                          )}
 
                           {!hasEnoughBalance && missingAmount > 0 && (
                             <InsufficientBalancePrompt
                               missingAmountKopeks={missingAmount}
                               compact
                               onBeforeTopUp={async () => {
-                                await subscriptionApi.saveLteTrafficCart(subscriptionId);
+                                await subscriptionApi.saveLteTrafficCart(packageGb, subscriptionId);
                               }}
                             />
                           )}
 
                           <button
-                            onClick={() => lteTrafficPurchaseMutation.mutate()}
-                            disabled={lteTrafficPurchaseMutation.isPending || !hasEnoughBalance}
+                            onClick={() => lteTrafficPurchaseMutation.mutate(packageGb)}
+                            disabled={lteTrafficPurchaseMutation.isPending || !hasEnoughBalance || !hasAvailablePackage}
                             className="btn-primary w-full py-3"
                           >
                             {lteTrafficPurchaseMutation.isPending ? (
@@ -2241,7 +2305,9 @@ export default function Subscription() {
                                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                               </span>
                             ) : (
-                              `Докупить ${packageGb} ГБ LTE`
+                              t('subscription.additionalOptions.buyLteTrafficGb', {
+                                gb: packageGb,
+                              })
                             )}
                           </button>
 

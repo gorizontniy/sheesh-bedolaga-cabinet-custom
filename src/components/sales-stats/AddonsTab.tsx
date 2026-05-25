@@ -52,7 +52,10 @@ export function AddonsTab({ params }: AddonsTabProps) {
   }
 
   const packageBarData = data.by_package.map((item) => ({
-    name: `${item.traffic_gb} GB`,
+    name:
+      item.kind === 'lte'
+        ? `LTE ${item.traffic_gb} ${t('common.units.gb')}`
+        : `${item.traffic_gb} ${t('common.units.gb')}`,
     value: item.count,
   }));
 

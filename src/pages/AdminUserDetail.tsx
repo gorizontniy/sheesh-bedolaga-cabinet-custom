@@ -336,6 +336,8 @@ export default function AdminUserDetail() {
 
   // Traffic packages
   const [selectedTrafficGb, setSelectedTrafficGb] = useState<string>('');
+  const [selectedLteTrafficGb, setSelectedLteTrafficGb] = useState<string>('');
+  const [chargeLteBalance, setChargeLteBalance] = useState(false);
 
   // Devices
   const [devices, setDevices] = useState<
@@ -844,6 +846,44 @@ export default function AdminUserDetail() {
     }
   };
 
+  const handleAddLteTraffic = async (gb: number) => {
+    if (!userId) return;
+    setActionLoading(true);
+    try {
+      await adminUsersApi.updateSubscription(userId, {
+        action: 'add_lte_traffic',
+        lte_traffic_gb: gb,
+        charge_balance: chargeLteBalance,
+        ...(activeSubscriptionId ? { subscription_id: activeSubscriptionId } : {}),
+      });
+      notify.success('LTE/WL package added');
+      setSelectedLteTrafficGb('');
+      await loadUser();
+    } catch {
+      notify.error(t('admin.users.userActions.error'), t('common.error'));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleRemoveLteTraffic = async (purchaseId: number) => {
+    if (!userId) return;
+    setActionLoading(true);
+    try {
+      await adminUsersApi.updateSubscription(userId, {
+        action: 'remove_lte_traffic',
+        lte_traffic_purchase_id: purchaseId,
+        ...(activeSubscriptionId ? { subscription_id: activeSubscriptionId } : {}),
+      });
+      notify.success('LTE/WL package removed');
+      await loadUser();
+    } catch {
+      notify.error(t('admin.users.userActions.error'), t('common.error'));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleSetDeviceLimit = async (newLimit: number) => {
     if (!userId) return;
     setActionLoading(true);
@@ -878,6 +918,7 @@ export default function AdminUserDetail() {
   }, [user, userSubscriptions]);
 
   const currentTariff = tariffs.find((t) => t.id === selectedSub?.tariff_id) || null;
+  const ltePackageOptions = selectedSub?.lte_traffic?.available_packages ?? [];
 
   const handleChangePromoGroup = async (groupId: number | null) => {
     if (!userId) return;
@@ -1216,6 +1257,15 @@ export default function AdminUserDetail() {
     const sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB'];
     const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1);
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+  };
+
+  const formatTrafficGb = (gb: number) => {
+    const safeGb = Number.isFinite(gb) ? gb : 0;
+    const fractionDigits = safeGb >= 10 ? 1 : 2;
+    return `${safeGb.toLocaleString(locale, {
+      maximumFractionDigits: fractionDigits,
+      minimumFractionDigits: 0,
+    })} ${t('common.units.gb')}`;
   };
 
   const copyToClipboard = async (text: string) => {
@@ -1913,6 +1963,18 @@ export default function AdminUserDetail() {
                         / {selectedSub.traffic_limit_gb} {t('common.units.gb')}
                       </div>
                     </div>
+                    {selectedSub.lte_traffic && (
+                      <div>
+                        <div className="text-xs text-dark-500">
+                          {t('admin.users.detail.subscription.lteTraffic')}
+                        </div>
+                        <div className="text-dark-100">
+                          {selectedSub.lte_traffic.traffic_used_gb.toFixed(1)} /{' '}
+                          {selectedSub.lte_traffic.traffic_limit_gb.toFixed(0)}{' '}
+                          {t('common.units.gb')}
+                        </div>
+                      </div>
+                    )}
                     <div>
                       <div className="text-xs text-dark-500">
                         {t('admin.users.detail.subscription.devices')}
@@ -2045,6 +2107,112 @@ export default function AdminUserDetail() {
                       </div>
                     </div>
                   )}
+
+                {/* LTE/WL Traffic */}
+                {selectedSub.lte_traffic && (
+                  <div className="rounded-xl bg-dark-800/50 p-4" data-role="admin-lte-packages">
+                    <div className="mb-3 flex items-center justify-between">
+                      <span className="text-sm font-medium text-dark-200">
+                        {t('admin.users.detail.subscription.lteTrafficPackages')}
+                      </span>
+                      <span className="text-xs text-dark-400">
+                        {selectedSub.lte_traffic.traffic_used_gb.toFixed(1)} /{' '}
+                        {selectedSub.lte_traffic.traffic_limit_gb.toFixed(0)} {t('common.units.gb')}
+                      </span>
+                    </div>
+
+                    {selectedSub.lte_traffic_purchases &&
+                      selectedSub.lte_traffic_purchases.length > 0 && (
+                        <div className="mb-3 space-y-2">
+                          {selectedSub.lte_traffic_purchases.map((tp) => (
+                            <div
+                              key={tp.id}
+                              className={`flex items-center justify-between rounded-lg px-3 py-2 ${
+                                tp.is_expired ? 'bg-dark-700/30 opacity-60' : 'bg-dark-700/50'
+                              }`}
+                            >
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2 text-sm text-dark-200">
+                                  <span className="font-medium">
+                                    {tp.traffic_gb} {t('common.units.gb')}
+                                  </span>
+                                  <span className="text-xs text-dark-400">
+                                    {tp.is_expired
+                                      ? t('admin.users.detail.subscription.expired')
+                                      : `${tp.days_remaining} ${t('admin.users.detail.subscription.daysLeft')}`}
+                                  </span>
+                                  <span className="text-xs text-dark-500">
+                                    {tp.source === 'admin'
+                                      ? t('admin.users.detail.subscription.sourceAdmin')
+                                      : t('admin.users.detail.subscription.sourceUser')}
+                                  </span>
+                                </div>
+                              </div>
+                              {!tp.is_expired && (
+                                <button
+                                  onClick={() =>
+                                    handleInlineConfirm(`removeLteTraffic_${tp.id}`, () =>
+                                      handleRemoveLteTraffic(tp.id),
+                                    )
+                                  }
+                                  disabled={actionLoading}
+                                  className={`ml-2 shrink-0 rounded-lg px-2 py-1 text-xs transition-all disabled:opacity-50 ${
+                                    confirmingAction === `removeLteTraffic_${tp.id}`
+                                      ? 'bg-error-500 text-white'
+                                      : 'text-dark-500 hover:bg-error-500/15 hover:text-error-400'
+                                  }`}
+                                >
+                                  {confirmingAction === `removeLteTraffic_${tp.id}` ? '?' : '\u00D7'}
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                    {ltePackageOptions.length > 0 && (
+                      <div className="space-y-2">
+                        <div className="flex gap-2">
+                          <select
+                            value={selectedLteTrafficGb}
+                            onChange={(e) => setSelectedLteTrafficGb(e.target.value)}
+                            className="input flex-1"
+                          >
+                            <option value="">
+                              {t('admin.users.detail.subscription.selectLtePackage')}
+                            </option>
+                            {ltePackageOptions.map((pkg) => (
+                              <option key={pkg.gb} value={pkg.gb}>
+                                {pkg.gb} {t('common.units.gb')} /{' '}
+                                {formatWithCurrency(pkg.price_kopeks / 100)}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            onClick={() =>
+                              selectedLteTrafficGb && handleAddLteTraffic(Number(selectedLteTrafficGb))
+                            }
+                            disabled={actionLoading || !selectedLteTrafficGb}
+                            className="shrink-0 rounded-lg bg-accent-500 px-4 py-2 text-sm text-white transition-colors hover:bg-accent-600 disabled:opacity-50"
+                          >
+                            {t('admin.users.detail.subscription.addButton')}
+                          </button>
+                        </div>
+                        <label className="flex items-center gap-2 text-xs text-dark-400">
+                          <input
+                            type="checkbox"
+                            checked={chargeLteBalance}
+                            onChange={(e) => setChargeLteBalance(e.target.checked)}
+                          />
+                          {t('admin.users.detail.subscription.chargeUserBalance')}
+                        </label>
+                        <div className="text-xs text-dark-500">
+                          {t('admin.users.detail.subscription.lteTrafficNote')}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Actions */}
                 {hasPermission('users:subscription') && (
@@ -2326,32 +2494,85 @@ export default function AdminUserDetail() {
                       <div className="mb-3 text-sm font-medium text-dark-200">
                         {t('admin.users.detail.liveTraffic')}
                       </div>
-                      <div className="mb-2">
-                        <div className="mb-1 flex justify-between text-xs">
-                          <span className="text-dark-400">
-                            {formatBytes(panelInfo.used_traffic_bytes)}
-                          </span>
-                          <span className="text-dark-500">
-                            {panelInfo.traffic_limit_bytes > 0
-                              ? formatBytes(panelInfo.traffic_limit_bytes)
-                              : '∞'}
-                          </span>
+                      <div className="space-y-4">
+                        <div>
+                          <div className="mb-1 flex justify-between gap-3 text-xs">
+                            <span className="font-medium text-dark-300">
+                              {t('admin.users.detail.subscription.traffic')}
+                            </span>
+                            <span className="shrink-0 text-dark-400">
+                              {formatBytes(panelInfo.used_traffic_bytes)} /{' '}
+                              {panelInfo.traffic_limit_bytes > 0
+                                ? formatBytes(panelInfo.traffic_limit_bytes)
+                                : '∞'}
+                            </span>
+                          </div>
+                          <div className="h-2 overflow-hidden rounded-full bg-dark-700">
+                            <div
+                              className="h-full rounded-full bg-accent-500 transition-all"
+                              style={{
+                                width:
+                                  panelInfo.traffic_limit_bytes > 0
+                                    ? `${Math.min(100, (panelInfo.used_traffic_bytes / panelInfo.traffic_limit_bytes) * 100)}%`
+                                    : '0%',
+                              }}
+                            />
+                          </div>
+                          <div className="mt-2 text-xs text-dark-500">
+                            {t('admin.users.detail.lifetime')}:{' '}
+                            {formatBytes(panelInfo.lifetime_used_traffic_bytes)}
+                          </div>
                         </div>
-                        <div className="h-2 overflow-hidden rounded-full bg-dark-700">
-                          <div
-                            className="h-full rounded-full bg-accent-500 transition-all"
-                            style={{
-                              width:
-                                panelInfo.traffic_limit_bytes > 0
-                                  ? `${Math.min(100, (panelInfo.used_traffic_bytes / panelInfo.traffic_limit_bytes) * 100)}%`
-                                  : '0%',
-                            }}
-                          />
-                        </div>
-                      </div>
-                      <div className="text-xs text-dark-500">
-                        {t('admin.users.detail.lifetime')}:{' '}
-                        {formatBytes(panelInfo.lifetime_used_traffic_bytes)}
+
+                        {selectedSub?.lte_traffic && (
+                          <div className="border-t border-dark-700/50 pt-3">
+                            <div className="mb-1 flex justify-between gap-3 text-xs">
+                              <span className="font-medium text-dark-300">
+                                {t('admin.users.detail.subscription.lteTraffic')}
+                              </span>
+                              <span className="shrink-0 text-dark-400">
+                                {formatTrafficGb(selectedSub.lte_traffic.traffic_used_gb)} /{' '}
+                                {selectedSub.lte_traffic.is_unlimited
+                                  ? '∞'
+                                  : formatTrafficGb(selectedSub.lte_traffic.traffic_limit_gb)}
+                              </span>
+                            </div>
+                            <div className="h-2 overflow-hidden rounded-full bg-dark-700">
+                              <div
+                                className="h-full rounded-full bg-accent-500 transition-all"
+                                style={{
+                                  width: selectedSub.lte_traffic.is_unlimited
+                                    ? '0%'
+                                    : `${Math.min(
+                                        100,
+                                        selectedSub.lte_traffic.traffic_used_percent ??
+                                          (selectedSub.lte_traffic.traffic_limit_gb > 0
+                                            ? (selectedSub.lte_traffic.traffic_used_gb /
+                                                selectedSub.lte_traffic.traffic_limit_gb) *
+                                              100
+                                            : 0),
+                                      )}%`,
+                                }}
+                              />
+                            </div>
+                            {(selectedSub.lte_traffic.base_limit_gb != null ||
+                              selectedSub.lte_traffic.purchased_traffic_gb != null) && (
+                              <div className="mt-2 text-xs text-dark-500">
+                                {t('admin.users.detail.subscription.baseTraffic')}:{' '}
+                                {formatTrafficGb(selectedSub.lte_traffic.base_limit_gb ?? 0)}
+                                {selectedSub.lte_traffic.purchased_traffic_gb != null && (
+                                  <>
+                                    {' · '}
+                                    {t('admin.users.detail.subscription.purchasedTraffic')}:{' '}
+                                    {formatTrafficGb(
+                                      selectedSub.lte_traffic.purchased_traffic_gb,
+                                    )}
+                                  </>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
 

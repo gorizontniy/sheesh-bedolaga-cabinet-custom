@@ -9,6 +9,37 @@ export interface TrafficPurchaseInfo {
   is_expired: boolean;
 }
 
+export interface LteTrafficPackageOption {
+  gb: number;
+  price_kopeks: number;
+  price_rubles: number;
+}
+
+export interface AdminLteTrafficInfo {
+  traffic_used_gb: number;
+  traffic_limit_gb: number;
+  traffic_used_percent: number;
+  base_limit_gb?: number;
+  purchased_traffic_gb?: number;
+  package_gb?: number;
+  package_price_kopeks?: number;
+  package_price_rubles?: number;
+  available_packages?: LteTrafficPackageOption[];
+  is_unlimited?: boolean;
+  updated_at?: string | null;
+}
+
+export interface LteTrafficPurchaseInfo {
+  id: number;
+  traffic_gb: number;
+  price_kopeks: number;
+  expires_at: string;
+  created_at: string;
+  days_remaining: number;
+  is_expired: boolean;
+  source: string;
+}
+
 export interface UserSubscriptionInfo {
   id: number;
   status: string;
@@ -25,6 +56,8 @@ export interface UserSubscriptionInfo {
   days_remaining: number;
   purchased_traffic_gb: number;
   traffic_purchases: TrafficPurchaseInfo[];
+  lte_traffic?: AdminLteTrafficInfo | null;
+  lte_traffic_purchases?: LteTrafficPurchaseInfo[];
 }
 
 export interface UserPromoGroupInfo {
@@ -330,6 +363,8 @@ export interface UpdateSubscriptionRequest {
     | 'create'
     | 'add_traffic'
     | 'remove_traffic'
+    | 'add_lte_traffic'
+    | 'remove_lte_traffic'
     | 'set_device_limit'
     | 'shorten';
   subscription_id?: number;
@@ -343,6 +378,9 @@ export interface UpdateSubscriptionRequest {
   device_limit?: number;
   traffic_gb?: number;
   traffic_purchase_id?: number;
+  lte_traffic_gb?: number;
+  lte_traffic_purchase_id?: number;
+  charge_balance?: boolean;
 }
 
 export interface UpdateSubscriptionResponse {
