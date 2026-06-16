@@ -96,6 +96,8 @@ export default function AdminUserDetail() {
 
   // Traffic packages
   const [selectedTrafficGb, setSelectedTrafficGb] = useState<string>('');
+  const [selectedLteTrafficGb, setSelectedLteTrafficGb] = useState<string>('');
+  const [chargeLteBalance, setChargeLteBalance] = useState(false);
 
   // Devices
   const [devices, setDevices] = useState<
@@ -520,6 +522,44 @@ export default function AdminUserDetail() {
     }
   };
 
+  const handleAddLteTraffic = async (gb: number) => {
+    if (!userId) return;
+    setActionLoading(true);
+    try {
+      await adminUsersApi.updateSubscription(userId, {
+        action: 'add_lte_traffic',
+        lte_traffic_gb: gb,
+        charge_balance: chargeLteBalance,
+        ...(activeSubscriptionId ? { subscription_id: activeSubscriptionId } : {}),
+      });
+      notify.success(t('admin.users.detail.subscription.trafficAdded'));
+      setSelectedLteTrafficGb('');
+      await loadUser();
+    } catch {
+      notify.error(t('admin.users.userActions.error'), t('common.error'));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleRemoveLteTraffic = async (purchaseId: number) => {
+    if (!userId) return;
+    setActionLoading(true);
+    try {
+      await adminUsersApi.updateSubscription(userId, {
+        action: 'remove_lte_traffic',
+        lte_traffic_purchase_id: purchaseId,
+        ...(activeSubscriptionId ? { subscription_id: activeSubscriptionId } : {}),
+      });
+      notify.success(t('admin.users.detail.subscription.trafficRemoved'));
+      await loadUser();
+    } catch {
+      notify.error(t('admin.users.userActions.error'), t('common.error'));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleRemoveTraffic = async (purchaseId: number) => {
     if (!userId) return;
     setActionLoading(true);
@@ -891,6 +931,12 @@ export default function AdminUserDetail() {
             onSetDeviceLimit={handleSetDeviceLimit}
             onAddTraffic={handleAddTraffic}
             onRemoveTraffic={handleRemoveTraffic}
+            selectedLteTrafficGb={selectedLteTrafficGb}
+            onSelectedLteTrafficGbChange={setSelectedLteTrafficGb}
+            chargeLteBalance={chargeLteBalance}
+            onChargeLteBalanceChange={setChargeLteBalance}
+            onAddLteTraffic={handleAddLteTraffic}
+            onRemoveLteTraffic={handleRemoveLteTraffic}
             onResetDevices={handleResetDevices}
             onDeleteDevice={handleDeleteDevice}
             onRenameDevice={handleRenameDevice}

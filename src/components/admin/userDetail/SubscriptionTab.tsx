@@ -129,6 +129,13 @@ export interface SubscriptionTabProps {
   onSetDeviceLimit: (newLimit: number) => Promise<void>;
   onAddTraffic: (gb: number) => Promise<void>;
   onRemoveTraffic: (purchaseId: number) => Promise<void>;
+  // Sheesh LTE/WL traffic admin
+  selectedLteTrafficGb: string;
+  onSelectedLteTrafficGbChange: (gb: string) => void;
+  chargeLteBalance: boolean;
+  onChargeLteBalanceChange: (v: boolean) => void;
+  onAddLteTraffic: (gb: number) => Promise<void>;
+  onRemoveLteTraffic: (purchaseId: number) => Promise<void>;
   onResetDevices: () => Promise<void>;
   onDeleteDevice: (hwid: string) => Promise<void>;
   onRenameDevice: (hwid: string) => Promise<void>;
@@ -192,6 +199,12 @@ export function SubscriptionTab(props: SubscriptionTabProps) {
     onSetDeviceLimit,
     onAddTraffic,
     onRemoveTraffic,
+    selectedLteTrafficGb,
+    onSelectedLteTrafficGbChange,
+    chargeLteBalance,
+    onChargeLteBalanceChange,
+    onAddLteTraffic,
+    onRemoveLteTraffic,
     onResetDevices,
     onDeleteDevice,
     onRenameDevice,
@@ -474,6 +487,108 @@ export function SubscriptionTab(props: SubscriptionTabProps) {
                 </div>
               </div>
             )}
+
+          {/* LTE/WL Traffic (Sheesh) */}
+          {selectedSub.lte_traffic && (
+            <div className="rounded-xl bg-dark-800/50 p-4" data-role="admin-lte-packages">
+              <div className="mb-3 flex items-center justify-between">
+                <span className="text-sm font-medium text-dark-200">
+                  {t('admin.users.detail.subscription.lteTrafficPackages')}
+                </span>
+                <span className="text-xs text-dark-400">
+                  {selectedSub.lte_traffic.traffic_used_gb.toFixed(1)} /{' '}
+                  {selectedSub.lte_traffic.traffic_limit_gb.toFixed(0)} {t('common.units.gb')}
+                </span>
+              </div>
+
+              {selectedSub.lte_traffic_purchases && selectedSub.lte_traffic_purchases.length > 0 && (
+                <div className="mb-3 space-y-2">
+                  {selectedSub.lte_traffic_purchases.map((tp) => (
+                    <div
+                      key={tp.id}
+                      className={`flex items-center justify-between rounded-lg px-3 py-2 ${
+                        tp.is_expired ? 'bg-dark-700/30 opacity-60' : 'bg-dark-700/50'
+                      }`}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 text-sm text-dark-200">
+                          <span className="font-medium">
+                            {tp.traffic_gb} {t('common.units.gb')}
+                          </span>
+                          <span className="text-xs text-dark-400">
+                            {tp.is_expired
+                              ? t('admin.users.detail.subscription.expired')
+                              : `${tp.days_remaining} ${t('admin.users.detail.subscription.daysLeft')}`}
+                          </span>
+                          <span className="text-xs text-dark-500">
+                            {tp.source === 'admin'
+                              ? t('admin.users.detail.subscription.sourceAdmin')
+                              : t('admin.users.detail.subscription.sourceUser')}
+                          </span>
+                        </div>
+                      </div>
+                      {!tp.is_expired && (
+                        <button
+                          onClick={() =>
+                            onInlineConfirm(`removeLteTraffic_${tp.id}`, () => onRemoveLteTraffic(tp.id))
+                          }
+                          disabled={actionLoading}
+                          className={`ml-2 shrink-0 rounded-lg px-2 py-1 text-xs transition-all disabled:opacity-50 ${
+                            confirmingAction === `removeLteTraffic_${tp.id}`
+                              ? 'bg-error-500 text-white'
+                              : 'text-dark-500 hover:bg-error-500/15 hover:text-error-400'
+                          }`}
+                        >
+                          {confirmingAction === `removeLteTraffic_${tp.id}` ? '?' : '×'}
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {(selectedSub.lte_traffic.available_packages ?? []).length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <select
+                      value={selectedLteTrafficGb}
+                      onChange={(e) => onSelectedLteTrafficGbChange(e.target.value)}
+                      className="input flex-1"
+                    >
+                      <option value="">
+                        {t('admin.users.detail.subscription.selectLtePackage')}
+                      </option>
+                      {(selectedSub.lte_traffic.available_packages ?? []).map((pkg) => (
+                        <option key={pkg.gb} value={pkg.gb}>
+                          {pkg.gb} {t('common.units.gb')} / {(pkg.price_kopeks / 100).toFixed(0)} ₽
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() =>
+                        selectedLteTrafficGb && onAddLteTraffic(Number(selectedLteTrafficGb))
+                      }
+                      disabled={actionLoading || !selectedLteTrafficGb}
+                      className="shrink-0 rounded-lg bg-accent-500 px-4 py-2 text-sm text-white transition-colors hover:bg-accent-600 disabled:opacity-50"
+                    >
+                      {t('admin.users.detail.subscription.addButton')}
+                    </button>
+                  </div>
+                  <label className="flex items-center gap-2 text-xs text-dark-400">
+                    <input
+                      type="checkbox"
+                      checked={chargeLteBalance}
+                      onChange={(e) => onChargeLteBalanceChange(e.target.checked)}
+                    />
+                    {t('admin.users.detail.subscription.chargeUserBalance')}
+                  </label>
+                  <div className="text-xs text-dark-500">
+                    {t('admin.users.detail.subscription.lteTrafficNote')}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Actions */}
           {hasPermission('users:subscription') && (
