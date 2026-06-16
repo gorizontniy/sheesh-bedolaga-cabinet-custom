@@ -1321,7 +1321,8 @@
         "conversion": "Conversion Rate",
         "byProvider": "By Registration Source",
         "dailyChart": "Daily Registrations & Trials",
-        "registrations": "Registrations"
+        "registrations": "Registrations",
+        "avgDuration": "Avg Duration"
       },
       "sales": {
         "totalSales": "Total Sales",

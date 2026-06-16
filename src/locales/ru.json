@@ -621,7 +621,11 @@
       "disconnectDevicesFirst": "Сначала отключите лишние устройства",
       "incrementDevices": "Увеличить кол-во устройств",
       "minDeviceLimit": "Минимальный лимит устройств",
-      "newDeviceLimit": "Новый лимит устройств"
+      "newDeviceLimit": "Новый лимит устройств",
+      "buyLteTrafficShort": "Докупить LTE-пакет",
+      "buyLteTrafficTitle": "Докупить LTE-пакет",
+      "buyLteTrafficGb": "Докупить {{gb}} ГБ LTE",
+      "lteTrafficWarning": "Докупленный LTE/WL пакет действует до конца текущей подписки и не переносится на следующий период"
     },
     "serverManagement": {
       "statusLegend": "✅ — подключено • ➕ — будет добавлено (платно) • ➖ — будет отключено",
@@ -1339,7 +1343,8 @@
         "conversion": "Конверсия",
         "byProvider": "По источнику регистрации",
         "dailyChart": "Регистрации и триалы по дням",
-        "registrations": "Регистрации"
+        "registrations": "Регистрации",
+        "avgDuration": "Средняя длит."
       },
       "sales": {
         "totalSales": "Всего продаж",
@@ -3761,7 +3766,16 @@
           "deviceLimitUpdated": "Лимит устройств обновлён",
           "invalidDays": "Введите корректное количество дней (больше 0)",
           "backToList": "К списку подписок",
-          "createNew": "Создать новую"
+          "createNew": "Создать новую",
+          "lteTraffic": "LTE/WL трафик",
+          "lteTrafficPackages": "LTE/WL пакеты",
+          "baseTraffic": "База",
+          "purchasedTraffic": "Докуплено",
+          "selectLtePackage": "Выберите LTE/WL пакет",
+          "lteTrafficNote": "LTE/WL пакеты действуют до конца текущей подписки.",
+          "chargeUserBalance": "Списать с баланса пользователя",
+          "sourceAdmin": "админ",
+          "sourceUser": "пользователь"
         },
         "balance": {
           "current": "Текущий баланс",

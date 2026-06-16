@@ -38,6 +38,7 @@ import Twemoji from 'react-twemoji';
 import { DeviceTopupSheet } from '../components/subscription/sheets/DeviceTopupSheet';
 import { DeviceReductionSheet } from '../components/subscription/sheets/DeviceReductionSheet';
 import { TrafficTopupSheet } from '../components/subscription/sheets/TrafficTopupSheet';
+import { LteTrafficTopupSheet } from '../components/subscription/sheets/LteTrafficTopupSheet';
 import { ServerManagementSheet } from '../components/subscription/sheets/ServerManagementSheet';
 import { DeleteSubscriptionSheet } from '../components/subscription/sheets/DeleteSubscriptionSheet';
 
@@ -209,6 +210,8 @@ export default function Subscription() {
   const [showDeviceReduction, setShowDeviceReduction] = useState(false);
   const [targetDeviceLimit, setTargetDeviceLimit] = useState<number>(1);
   const [showTrafficTopup, setShowTrafficTopup] = useState(false);
+  const [showLteTrafficTopup, setShowLteTrafficTopup] = useState(false);
+  const [selectedLteTrafficGb, setSelectedLteTrafficGb] = useState<number | null>(null);
   const [selectedTrafficPackage, setSelectedTrafficPackage] = useState<number | null>(null);
   const [showServerManagement, setShowServerManagement] = useState(false);
   const [selectedServersToUpdate, setSelectedServersToUpdate] = useState<string[]>([]);
@@ -1343,6 +1346,24 @@ export default function Subscription() {
                   subscriptionId={subscriptionId}
                   selectedTrafficPackage={selectedTrafficPackage}
                   onSelectedTrafficPackageChange={setSelectedTrafficPackage}
+                  purchaseOptions={purchaseOptions}
+                  isDark={isDark}
+                />
+              </div>
+            )}
+
+            {/* Buy LTE/WL Traffic (Sheesh) */}
+            {subscription.lte_traffic && (
+              <div className="mt-4">
+                <LteTrafficTopupSheet
+                  open={showLteTrafficTopup}
+                  onOpen={() => setShowLteTrafficTopup(true)}
+                  onClose={() => setShowLteTrafficTopup(false)}
+                  subscription={subscription}
+                  subscriptionId={subscriptionId}
+                  currentLteTraffic={subscription.lte_traffic}
+                  selectedLteTrafficGb={selectedLteTrafficGb}
+                  onSelectedLteTrafficGbChange={setSelectedLteTrafficGb}
                   purchaseOptions={purchaseOptions}
                   isDark={isDark}
                 />

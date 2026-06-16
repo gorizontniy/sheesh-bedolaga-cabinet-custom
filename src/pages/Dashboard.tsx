@@ -22,6 +22,7 @@ import PendingGiftCard from '../components/dashboard/PendingGiftCard';
 import SubscriptionListCard from '../components/subscription/SubscriptionListCard';
 import { API } from '../config/constants';
 import { ChevronRightIcon, StarIcon } from '@/components/icons';
+import type { LteTrafficInfo } from '../types';
 
 export default function Dashboard() {
   const { t } = useTranslation();
@@ -127,6 +128,7 @@ export default function Dashboard() {
     traffic_used_gb: number;
     traffic_used_percent: number;
     is_unlimited: boolean;
+    lte_traffic?: LteTrafficInfo | null;
   } | null>(null);
 
   const refreshTrafficMutation = useMutation({
@@ -136,6 +138,7 @@ export default function Dashboard() {
         traffic_used_gb: data.traffic_used_gb,
         traffic_used_percent: data.traffic_used_percent,
         is_unlimited: data.is_unlimited,
+        lte_traffic: data.lte_traffic ?? null,
       });
       localStorage.setItem(
         `traffic_refresh_ts_${subscription?.id ?? 'default'}`,
