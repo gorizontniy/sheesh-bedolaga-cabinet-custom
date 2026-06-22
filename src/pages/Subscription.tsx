@@ -42,6 +42,46 @@ import { LteTrafficTopupSheet } from '../components/subscription/sheets/LteTraff
 import { ServerManagementSheet } from '../components/subscription/sheets/ServerManagementSheet';
 import { DeleteSubscriptionSheet } from '../components/subscription/sheets/DeleteSubscriptionSheet';
 
+type SubscriptionLocationBadge = {
+  key: string;
+  name: string;
+  countryCode: string | null;
+};
+
+const SMART_RELAY_SQUAD_UUID = 'b4528673-bac5-427f-b2e0-6b5e4cf22416';
+const LTE_RELAY_SQUAD_UUID = 'f1c6f786-0c75-4362-a285-47798e758541';
+
+/** Map a backend "server" (squad) to the country / WL badges shown to users. */
+function getSubscriptionLocationBadges(server: {
+  uuid: string;
+  name: string;
+  country_code: string | null;
+}): SubscriptionLocationBadge[] {
+  const uuid = server.uuid.toLowerCase();
+  const normalizedName = server.name.toLowerCase();
+
+  if (uuid === SMART_RELAY_SQUAD_UUID || normalizedName.includes('smart #1')) {
+    return [
+      { key: `${server.uuid}:de`, name: 'Германия', countryCode: 'DE' },
+      { key: `${server.uuid}:fi`, name: 'Финляндия', countryCode: 'FI' },
+      { key: `${server.uuid}:us`, name: 'США', countryCode: 'US' },
+    ];
+  }
+
+  if (uuid === LTE_RELAY_SQUAD_UUID || normalizedName.includes('lte #1')) {
+    return [
+      { key: `${server.uuid}:wl-0`, name: 'Обход БС 0', countryCode: 'RU' },
+      { key: `${server.uuid}:wl-7`, name: 'Обход БС 7', countryCode: 'RU' },
+    ];
+  }
+
+  if (normalizedName.includes('test') || normalizedName.includes('bg msc')) {
+    return [];
+  }
+
+  return [{ key: server.uuid, name: server.name, countryCode: server.country_code }];
+}
+
 /** Isolated countdown so 1s interval doesn't re-render the whole page */
 const CountdownTimer = memo(function CountdownTimer({
   endDate,
@@ -938,20 +978,29 @@ export default function Subscription() {
                     {t('subscription.locationsLabel')}
                   </div>
                   <div className="flex flex-wrap gap-1.5">
-                    {subscription.servers.map((server) => (
+                    {Array.from(
+                      new Map(
+                        subscription.servers
+                          .flatMap(getSubscriptionLocationBadges)
+                          .map(
+                            (location) =>
+                              [location.key, location] as [string, SubscriptionLocationBadge],
+                          ),
+                      ).values(),
+                    ).map((location) => (
                       <span
-                        key={server.uuid}
+                        key={location.key}
                         className="inline-flex items-center gap-1.5 rounded-[8px] px-2.5 py-1 text-[11px] font-medium text-dark-50/50"
                         style={{
                           background: g.innerBorder,
                           border: `1px solid ${g.trackBg}`,
                         }}
                       >
-                        {server.country_code && (
-                          <span className="text-xs">{getFlagEmoji(server.country_code)}</span>
+                        {location.countryCode && (
+                          <span className="text-xs">{getFlagEmoji(location.countryCode)}</span>
                         )}
                         <Twemoji options={{ className: 'twemoji', folder: 'svg', ext: '.svg' }}>
-                          {server.name}
+                          {location.name}
                         </Twemoji>
                       </span>
                     ))}

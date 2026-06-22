@@ -49,6 +49,7 @@ export default function SubscriptionCardActive({
   const lteIsUnlimited = lteTraffic?.is_unlimited ?? lteLimitGb === 0;
   const zone = useTrafficZone(usedPercent);
   const animatedPercent = useAnimatedNumber(usedPercent);
+  const animatedLtePercent = useAnimatedNumber(ltePercent);
   const haptic = useHaptic();
 
   const isAtDeviceLimit =
@@ -167,37 +168,70 @@ export default function SubscriptionCardActive({
 
       {lteTraffic && (
         <div
-          className="mb-6 rounded-[14px] p-3.5"
+          className="mb-6 rounded-[16px] p-4"
           style={{
-            background: g.innerBg,
-            border: `1px solid ${g.innerBorder}`,
+            background: 'rgba(var(--color-accent-400), 0.07)',
+            border: '1px solid rgba(var(--color-accent-400), 0.18)',
           }}
         >
-          <div className="mb-2 flex items-center justify-between gap-3">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-dark-50/45">
-              LTE трафик
-            </span>
-            <span className="shrink-0 font-mono text-[11px] text-dark-50/35">
-              {lteIsUnlimited
-                ? formatTraffic(lteUsedGb)
-                : `${formatTraffic(lteUsedGb)} / ${formatTraffic(lteLimitGb)}`}
-            </span>
+          {/* Header — mirrors the main traffic header */}
+          <div className="mb-4 flex items-start justify-between">
+            <div>
+              <div className="mb-1 flex items-center gap-2">
+                <div
+                  className="h-2 w-2 rounded-full"
+                  style={{
+                    background: 'rgb(var(--color-accent-400))',
+                    boxShadow: '0 0 8px rgba(var(--color-accent-400), 0.5)',
+                  }}
+                  aria-hidden="true"
+                />
+                <span className="font-mono text-[11px] font-semibold uppercase tracking-widest text-accent-300">
+                  LTE / WL
+                </span>
+              </div>
+              <h3 className="text-lg font-bold tracking-tight text-dark-50">LTE трафик</h3>
+            </div>
+
+            {/* Big percentage — same styling as the main card */}
+            <div className="text-right">
+              {lteIsUnlimited ? (
+                <>
+                  <div className="font-display text-[34px] font-extrabold leading-none tracking-tight text-accent-300">
+                    &#8734;
+                  </div>
+                  <div className="mt-1 font-mono text-[11px] text-dark-50/35">
+                    {formatTraffic(lteUsedGb)}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="font-display text-[34px] font-extrabold leading-none tracking-tight text-dark-50">
+                    {ltePercent > 0 && ltePercent < 1 ? '<1' : animatedLtePercent.toFixed(0)}
+                    <span className="ml-px text-lg font-medium text-dark-50/35">%</span>
+                  </div>
+                  <div className="mt-0.5 font-mono text-[11px] text-dark-50/35">
+                    {formatTraffic(lteUsedGb)} / {formatTraffic(lteLimitGb)}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
+
           <TrafficProgressBar
             usedGb={lteUsedGb}
             limitGb={lteLimitGb}
             percent={ltePercent}
             isUnlimited={lteIsUnlimited}
-            compact
           />
           <Link
             to={`/subscriptions/${subscription.id}`}
-            className="mt-3 block rounded-xl border border-accent-400/20 bg-accent-400/10 px-3 py-2 text-center text-[12px] font-semibold text-accent-300 transition-colors hover:bg-accent-400/15"
+            className="mt-4 block rounded-xl border border-accent-400/25 bg-accent-400/15 px-3 py-2 text-center text-[12px] font-semibold text-accent-300 transition-colors hover:bg-accent-400/20"
           >
             Докупить LTE
           </Link>
-          <div className="mt-2 text-[10px] leading-snug text-dark-50/28">
-            DE LTE и WL сервера считаются как LTE
+          <div className="mt-2 text-[10px] leading-snug text-dark-50/40">
+            Обходы белых списков (WL) считаются как LTE трафик
           </div>
         </div>
       )}
