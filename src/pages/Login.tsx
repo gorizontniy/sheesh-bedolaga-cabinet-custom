@@ -24,6 +24,7 @@ import OAuthProviderIcon from '../components/OAuthProviderIcon';
 import { saveOAuthState } from '../utils/oauth';
 import { getPendingReferralCode } from '../utils/referral';
 import { UsersIcon, EmailIcon, RefreshIcon, ChevronDownIcon } from '@/components/icons';
+import LegalFooter from '../components/LegalFooter';
 
 export default function Login() {
   const { t } = useTranslation();
@@ -112,6 +113,12 @@ export default function Login() {
   });
   const isEmailAuthEnabled = emailAuthConfig?.enabled ?? true;
   const isEmailVerificationEnabled = emailAuthConfig?.verification_enabled ?? true;
+
+  const { data: footerEnabled } = useQuery({
+    queryKey: ['footer-enabled'],
+    queryFn: brandingApi.getFooterEnabled,
+    staleTime: 60000,
+  });
 
   // Fetch enabled OAuth providers
   const { data: oauthData } = useQuery({
@@ -589,7 +596,7 @@ export default function Login() {
                               type="button"
                               className={`flex-1 rounded-md py-2 text-sm font-medium transition-all ${
                                 authMode === 'login'
-                                  ? 'bg-accent-500 text-white'
+                                  ? 'bg-accent-500 text-on-accent'
                                   : 'text-dark-400 hover:text-dark-200'
                               }`}
                               onClick={() => setAuthMode('login')}
@@ -600,7 +607,7 @@ export default function Login() {
                               type="button"
                               className={`flex-1 rounded-md py-2 text-sm font-medium transition-all ${
                                 authMode === 'register'
-                                  ? 'bg-accent-500 text-white'
+                                  ? 'bg-accent-500 text-on-accent'
                                   : 'text-dark-400 hover:text-dark-200'
                               }`}
                               onClick={() => setAuthMode('register')}
@@ -743,6 +750,7 @@ export default function Login() {
             )}
           </div>
         )}
+        {footerEnabled && <LegalFooter className="pt-1" />}
       </div>
     </div>
   );
