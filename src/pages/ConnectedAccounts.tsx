@@ -325,6 +325,7 @@ export default function ConnectedAccounts() {
   const [emailMergeCodePending, setEmailMergeCodePending] = useState(false);
   const [emailMergeCode, setEmailMergeCode] = useState('');
   const setUser = useAuthStore((state) => state.setUser);
+  const user = useAuthStore((state) => state.user);
 
   const { data: emailAuthConfig } = useQuery<EmailAuthEnabled>({
     queryKey: ['email-auth-enabled'],
@@ -437,6 +438,16 @@ export default function ConnectedAccounts() {
         setEmailError(detail || t('common.error'));
       }
       setEmailSuccess(null);
+    },
+  });
+
+  const resendVerificationMutation = useMutation({
+    mutationFn: () => authApi.resendVerification(),
+    onSuccess: () => {
+      showToast({ type: 'success', message: t('profile.emailResendSuccess') });
+    },
+    onError: (err: { response?: { data?: { detail?: string } } }) => {
+      showToast({ type: 'error', message: err.response?.data?.detail || t('common.error') });
     },
   });
 
@@ -688,7 +699,11 @@ export default function ConnectedAccounts() {
               <div className="flex shrink-0 flex-col items-end gap-1.5">
                 {provider.linked ? (
                   <>
-                    <span className="text-sm text-success-500">{t('profile.accounts.linked')}</span>
+                    {provider.provider === 'email' && user?.email_verified === false ? (
+                      <span className="text-sm text-warning-500">{t('profile.accounts.pendingConfirmation')}</span>
+                    ) : (
+                      <span className="text-sm text-success-500">{t('profile.accounts.linked')}</span>
+                    )}
                     {canUnlink(provider) && (
                       <Button
                         variant={confirmingUnlink === provider.provider ? 'destructive' : 'outline'}
@@ -715,6 +730,23 @@ export default function ConnectedAccounts() {
                 )}
               </div>
             </div>
+
+            {provider.provider === 'email' && provider.linked && user?.email_verified === false && (
+              <div className="mt-4 border-t border-dark-700/30 pt-4">
+                <div className="rounded-xl border border-warning-500/30 bg-warning-500/10 p-3 text-sm text-warning-400">
+                  {t('profile.emailPendingBanner', { email: provider.identifier ?? '' })}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-3"
+                  loading={resendVerificationMutation.isPending}
+                  onClick={() => resendVerificationMutation.mutate()}
+                >
+                  {t('profile.emailResend')}
+                </Button>
+              </div>
+            )}
 
             {/* Inline email linking form */}
             {provider.provider === 'email' && !provider.linked && (
