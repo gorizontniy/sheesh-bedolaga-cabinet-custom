@@ -50,6 +50,7 @@ type SubscriptionLocationBadge = {
 
 const SMART_RELAY_SQUAD_UUID = 'b4528673-bac5-427f-b2e0-6b5e4cf22416';
 const LTE_RELAY_SQUAD_UUID = 'f1c6f786-0c75-4362-a285-47798e758541';
+const RU_ACCESS_SQUAD_UUID = '3b54bbba-863e-495e-ab65-6b9b41adf860';
 
 /** Map a backend "server" (squad) to the country / WL badges shown to users. */
 function getSubscriptionLocationBadges(server: {
@@ -64,6 +65,7 @@ function getSubscriptionLocationBadges(server: {
     return [
       { key: `${server.uuid}:de`, name: 'Германия', countryCode: 'DE' },
       { key: `${server.uuid}:fi`, name: 'Финляндия', countryCode: 'FI' },
+      { key: `${server.uuid}:se`, name: 'Швеция', countryCode: 'SE' },
       { key: `${server.uuid}:us`, name: 'США', countryCode: 'US' },
     ];
   }
@@ -75,11 +77,18 @@ function getSubscriptionLocationBadges(server: {
     ];
   }
 
+  if (uuid === RU_ACCESS_SQUAD_UUID || normalizedName.includes('ru-access')) {
+    return [{ key: `${server.uuid}:ru`, name: 'Россия', countryCode: 'RU' }];
+  }
+
   if (normalizedName.includes('test') || normalizedName.includes('bg msc')) {
     return [];
   }
 
-  return [{ key: server.uuid, name: server.name, countryCode: server.country_code }];
+  // Unknown squads are hidden, not printed: the old fallback rendered the raw
+  // internal squad name to users (that is how 'RW-RU-Access-Squad' leaked into
+  // the UI). A new location must be added above deliberately.
+  return [];
 }
 
 /** Isolated countdown so 1s interval doesn't re-render the whole page */
