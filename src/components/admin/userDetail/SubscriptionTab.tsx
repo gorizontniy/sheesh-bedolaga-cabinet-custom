@@ -138,6 +138,7 @@ export interface SubscriptionTabProps {
   onRemoveLteTraffic: (purchaseId: number) => Promise<void>;
   onResetDevices: () => Promise<void>;
   onCancelSbpRecurring: () => Promise<void>;
+  onDeleteSubscription: () => Promise<void>;
   onDeleteDevice: (hwid: string) => Promise<void>;
   onRenameDevice: (hwid: string) => Promise<void>;
   onLoadDevices: () => Promise<void>;
@@ -208,6 +209,7 @@ export function SubscriptionTab(props: SubscriptionTabProps) {
     onRemoveLteTraffic,
     onResetDevices,
     onCancelSbpRecurring,
+    onDeleteSubscription,
     onDeleteDevice,
     onRenameDevice,
     onLoadDevices,
@@ -442,6 +444,41 @@ export function SubscriptionTab(props: SubscriptionTabProps) {
             </div>
           )}
 
+          {/* Delete this subscription — in multi-tariff mode spent trials
+              pile up in the card, and removing one used to be possible
+              only through the bulk-actions screen. */}
+          {hasPermission('users:subscription') && (
+            <div className="rounded-xl bg-dark-800/50 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-sm font-medium text-dark-200">
+                    {t('admin.users.detail.subscription.deleteTitle')}
+                  </div>
+                  <div className="mt-0.5 text-xs text-dark-400">
+                    {t('admin.users.detail.subscription.deleteHint')}
+                  </div>
+                </div>
+                <button
+                  // Per-subscription confirm key: an armed confirm must not
+                  // survive switching to another subscription in the picker.
+                  onClick={() =>
+                    onInlineConfirm(`deleteSubscription_${selectedSub.id}`, onDeleteSubscription)
+                  }
+                  disabled={actionLoading}
+                  className={`shrink-0 rounded-lg px-3 py-2 text-sm font-medium transition-all disabled:opacity-50 ${
+                    confirmingAction === `deleteSubscription_${selectedSub.id}`
+                      ? 'bg-error-500 text-white'
+                      : 'bg-error-500/15 text-error-400 hover:bg-error-500/25'
+                  }`}
+                >
+                  {confirmingAction === `deleteSubscription_${selectedSub.id}`
+                    ? t('admin.users.detail.actions.areYouSure')
+                    : t('admin.users.detail.subscription.deleteButton')}
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Traffic Packages */}
           {selectedSub.traffic_purchases && selectedSub.traffic_purchases.length > 0 && (
             <div className="rounded-xl bg-dark-800/50 p-4">
@@ -550,51 +587,54 @@ export function SubscriptionTab(props: SubscriptionTabProps) {
                 </span>
               </div>
 
-              {selectedSub.lte_traffic_purchases && selectedSub.lte_traffic_purchases.length > 0 && (
-                <div className="mb-3 space-y-2">
-                  {selectedSub.lte_traffic_purchases.map((tp) => (
-                    <div
-                      key={tp.id}
-                      className={`flex items-center justify-between rounded-lg px-3 py-2 ${
-                        tp.is_expired ? 'bg-dark-700/30 opacity-60' : 'bg-dark-700/50'
-                      }`}
-                    >
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 text-sm text-dark-200">
-                          <span className="font-medium">
-                            {tp.traffic_gb} {t('common.units.gb')}
-                          </span>
-                          <span className="text-xs text-dark-400">
-                            {tp.is_expired
-                              ? t('admin.users.detail.subscription.expired')
-                              : `${tp.days_remaining} ${t('admin.users.detail.subscription.daysLeft')}`}
-                          </span>
-                          <span className="text-xs text-dark-500">
-                            {tp.source === 'admin'
-                              ? t('admin.users.detail.subscription.sourceAdmin')
-                              : t('admin.users.detail.subscription.sourceUser')}
-                          </span>
+              {selectedSub.lte_traffic_purchases &&
+                selectedSub.lte_traffic_purchases.length > 0 && (
+                  <div className="mb-3 space-y-2">
+                    {selectedSub.lte_traffic_purchases.map((tp) => (
+                      <div
+                        key={tp.id}
+                        className={`flex items-center justify-between rounded-lg px-3 py-2 ${
+                          tp.is_expired ? 'bg-dark-700/30 opacity-60' : 'bg-dark-700/50'
+                        }`}
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 text-sm text-dark-200">
+                            <span className="font-medium">
+                              {tp.traffic_gb} {t('common.units.gb')}
+                            </span>
+                            <span className="text-xs text-dark-400">
+                              {tp.is_expired
+                                ? t('admin.users.detail.subscription.expired')
+                                : `${tp.days_remaining} ${t('admin.users.detail.subscription.daysLeft')}`}
+                            </span>
+                            <span className="text-xs text-dark-500">
+                              {tp.source === 'admin'
+                                ? t('admin.users.detail.subscription.sourceAdmin')
+                                : t('admin.users.detail.subscription.sourceUser')}
+                            </span>
+                          </div>
                         </div>
+                        {!tp.is_expired && (
+                          <button
+                            onClick={() =>
+                              onInlineConfirm(`removeLteTraffic_${tp.id}`, () =>
+                                onRemoveLteTraffic(tp.id),
+                              )
+                            }
+                            disabled={actionLoading}
+                            className={`ml-2 shrink-0 rounded-lg px-2 py-1 text-xs transition-all disabled:opacity-50 ${
+                              confirmingAction === `removeLteTraffic_${tp.id}`
+                                ? 'bg-error-500 text-white'
+                                : 'text-dark-500 hover:bg-error-500/15 hover:text-error-400'
+                            }`}
+                          >
+                            {confirmingAction === `removeLteTraffic_${tp.id}` ? '?' : '×'}
+                          </button>
+                        )}
                       </div>
-                      {!tp.is_expired && (
-                        <button
-                          onClick={() =>
-                            onInlineConfirm(`removeLteTraffic_${tp.id}`, () => onRemoveLteTraffic(tp.id))
-                          }
-                          disabled={actionLoading}
-                          className={`ml-2 shrink-0 rounded-lg px-2 py-1 text-xs transition-all disabled:opacity-50 ${
-                            confirmingAction === `removeLteTraffic_${tp.id}`
-                              ? 'bg-error-500 text-white'
-                              : 'text-dark-500 hover:bg-error-500/15 hover:text-error-400'
-                          }`}
-                        >
-                          {confirmingAction === `removeLteTraffic_${tp.id}` ? '?' : '×'}
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
 
               {(selectedSub.lte_traffic.available_packages ?? []).length > 0 && (
                 <div className="space-y-2">
