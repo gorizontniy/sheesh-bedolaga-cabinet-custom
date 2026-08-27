@@ -248,6 +248,17 @@ const CountdownTimer = memo(function CountdownTimer({
   );
 });
 
+// The monthly packages arrive with a server-computed progress_percent; LTE ones
+// carry only the two dates, so derive the identical value instead of widening
+// the shared admin schema for one bar.
+function elapsedPercent(createdAt: string, expiresAt: string): number {
+  const start = new Date(createdAt).getTime();
+  const end = new Date(expiresAt).getTime();
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return 0;
+  const ratio = ((Date.now() - start) / (end - start)) * 100;
+  return Math.min(100, Math.max(0, ratio));
+}
+
 export default function Subscription() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -763,6 +774,8 @@ export default function Subscription() {
           // LTE/WL is metered separately from the main package, so it gets its
           // own bar here — the same pair the dashboard card shows.
           const lteTraffic = subscription.lte_traffic ?? null;
+          const ltePurchases = subscription.lte_traffic_purchases ?? [];
+          const mainPurchases = subscription.traffic_purchases ?? [];
           const lteUsedGb = lteTraffic?.traffic_used_gb ?? 0;
           const lteLimitGb = lteTraffic?.traffic_limit_gb ?? 0;
           const ltePercent = lteTraffic?.traffic_used_percent ?? 0;
@@ -1225,13 +1238,13 @@ export default function Subscription() {
               )}
 
               {/* ─── Purchased Traffic Packages ─── */}
-              {subscription.traffic_purchases && subscription.traffic_purchases.length > 0 && (
+              {(mainPurchases.length > 0 || ltePurchases.length > 0) && (
                 <div className="mb-5">
                   <div className="mb-2 text-[10px] font-medium uppercase tracking-wider text-dark-50/35">
                     {t('subscription.purchasedTraffic')}
                   </div>
                   <div className="space-y-2">
-                    {subscription.traffic_purchases.map((purchase) => (
+                    {mainPurchases.map((purchase) => (
                       <div
                         key={purchase.id}
                         className="rounded-[12px] p-3"
@@ -1281,6 +1294,78 @@ export default function Subscription() {
                             className="absolute inset-0 origin-left rounded-full bg-accent-500 transition-transform duration-500"
                             style={{
                               transform: `scaleX(${purchase.progress_percent / 100})`,
+                            }}
+                          />
+                        </div>
+                        <div className="mt-1 flex justify-between font-mono text-[9px] text-dark-50/20">
+                          <span>
+                            {new Date(purchase.created_at).toLocaleDateString(uiLocale())}
+                          </span>
+                          <span>
+                            {new Date(purchase.expires_at).toLocaleDateString(uiLocale())}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+
+                    {ltePurchases.map((purchase) => (
+                      <div
+                        key={`lte-${purchase.id}`}
+                        className="rounded-[12px] p-3"
+                        style={{
+                          background: 'rgba(var(--color-accent-400), 0.07)',
+                          border: '1px solid rgba(var(--color-accent-400), 0.18)',
+                        }}
+                      >
+                        <div className="mb-2 flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="flex h-7 w-7 items-center justify-center rounded-[8px]"
+                              style={{
+                                background: 'rgba(var(--color-accent-400), 0.12)',
+                                color: 'rgb(var(--color-accent-400))',
+                              }}
+                            >
+                              <DownloadIcon className="h-3.5 w-3.5" />
+                            </div>
+                            <span className="text-sm font-semibold text-dark-50">
+                              {purchase.traffic_gb} {t('common.units.gb')}
+                            </span>
+                            <span className="rounded-full bg-accent-400/15 px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-accent-300">
+                              LTE / WL
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <div
+                              className="text-[11px] font-medium"
+                              style={{
+                                color: purchase.days_remaining === 0 ? '#FF6B35' : g.textSecondary,
+                              }}
+                            >
+                              {purchase.days_remaining === 0
+                                ? t('subscription.expired')
+                                : t('subscription.days', { count: purchase.days_remaining })}
+                            </div>
+                            <div className="mt-0.5 font-mono text-[9px] text-dark-50/20">
+                              {t('subscription.trafficResetAt')}:{' '}
+                              {new Date(purchase.expires_at).toLocaleDateString(uiLocale(), {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                        <div
+                          className="relative h-1.5 overflow-hidden rounded-full"
+                          style={{ background: g.trackBg }}
+                        >
+                          <div
+                            className="absolute inset-0 origin-left rounded-full bg-accent-400 transition-transform duration-500"
+                            style={{
+                              transform: `scaleX(${
+                                elapsedPercent(purchase.created_at, purchase.expires_at) / 100
+                              })`,
                             }}
                           />
                         </div>

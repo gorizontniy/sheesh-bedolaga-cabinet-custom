@@ -69,6 +69,17 @@ export interface TrafficPurchase {
   progress_percent: number;
 }
 
+export interface LteTrafficPurchase {
+  id: number;
+  traffic_gb: number;
+  price_kopeks: number;
+  expires_at: string;
+  created_at: string;
+  days_remaining: number;
+  is_expired: boolean;
+  source: string;
+}
+
 export interface LteTrafficPackageOption {
   gb: number;
   price_kopeks: number;
@@ -129,6 +140,7 @@ export interface Subscription {
   is_expired: boolean;
   is_limited: boolean;
   traffic_purchases?: TrafficPurchase[];
+  lte_traffic_purchases?: LteTrafficPurchase[];
   // Daily tariff fields
   is_daily?: boolean;
   is_daily_paused?: boolean;
