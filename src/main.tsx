@@ -41,9 +41,17 @@ installEncodingSurrogateGuard();
 // Without this, init() and any launch-params retrieval below throw
 // LaunchParamsRetrieveError on affected devices.
 // See: https://github.com/Telegram-Mini-Apps/tma.js/issues/683
-if (typeof (Object as { hasOwn?: unknown }).hasOwn !== 'function') {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (Object as any).hasOwn = (obj: object, prop: PropertyKey): boolean => Object.hasOwn(obj, prop);
+// The polyfill must not go through Object.hasOwn in any form: on the devices
+// that lack it, the assignment below has just made Object.hasOwn point at this
+// very arrow, so calling it would recurse until the stack blew. hasOwnProperty
+// is the real primitive. It is destructured deliberately — biome's
+// `useObjectHasOwn` autofix rewrites `Object.prototype.hasOwnProperty.call(...)`
+// back into `Object.hasOwn(...)`, which is how the recursion got here.
+const objectCtor = Object as { hasOwn?: (obj: object, prop: PropertyKey) => boolean };
+if (typeof objectCtor.hasOwn !== 'function') {
+  const nativeHasOwnProperty = Object.prototype.hasOwnProperty;
+  objectCtor.hasOwn = (obj: object, prop: PropertyKey): boolean =>
+    nativeHasOwnProperty.call(obj, prop);
 }
 
 // Only initialize Telegram SDK when running inside Telegram
