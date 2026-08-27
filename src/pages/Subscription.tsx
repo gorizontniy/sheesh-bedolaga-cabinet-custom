@@ -760,6 +760,13 @@ export default function Subscription() {
           const usedGb = trafficData?.traffic_used_gb ?? subscription.traffic_used_gb;
           const isUnlimited =
             (trafficData?.is_unlimited ?? false) || subscription.traffic_limit_gb === 0;
+          // LTE/WL is metered separately from the main package, so it gets its
+          // own bar here — the same pair the dashboard card shows.
+          const lteTraffic = subscription.lte_traffic ?? null;
+          const lteUsedGb = lteTraffic?.traffic_used_gb ?? 0;
+          const lteLimitGb = lteTraffic?.traffic_limit_gb ?? 0;
+          const ltePercent = lteTraffic?.traffic_used_percent ?? 0;
+          const lteIsUnlimited = lteTraffic?.is_unlimited ?? lteLimitGb === 0;
           const connectedDevices = devicesData?.total ?? 0;
           const isAtDeviceLimit =
             subscription.device_limit > 0 && connectedDevices >= subscription.device_limit;
@@ -1017,6 +1024,39 @@ export default function Subscription() {
                   compact
                 />
               </div>
+
+              {/* ─── LTE / WL Traffic ─── */}
+              {lteTraffic && (
+                <div className="mb-6">
+                  <div className="mb-2.5 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="h-1.5 w-1.5 rounded-full"
+                        style={{
+                          background: 'rgb(var(--color-accent-400))',
+                          boxShadow: '0 0 8px rgba(var(--color-accent-400), 0.5)',
+                        }}
+                        aria-hidden="true"
+                      />
+                      <span className="text-[11px] font-medium uppercase tracking-wider text-accent-300/80">
+                        LTE / WL
+                      </span>
+                    </div>
+                    <span className="font-mono text-[11px] text-dark-50/30">
+                      {lteIsUnlimited
+                        ? formatTraffic(lteUsedGb)
+                        : `${formatTraffic(lteUsedGb)} / ${formatTraffic(lteLimitGb)}`}
+                    </span>
+                  </div>
+                  <TrafficProgressBar
+                    usedGb={lteUsedGb}
+                    limitGb={lteLimitGb}
+                    percent={ltePercent}
+                    isUnlimited={lteIsUnlimited}
+                    compact
+                  />
+                </div>
+              )}
 
               {/* ─── Connect Device Button ─── */}
               {subscription.subscription_url && (
