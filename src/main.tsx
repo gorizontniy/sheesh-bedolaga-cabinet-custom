@@ -42,6 +42,11 @@ installEncodingSurrogateGuard();
 // LaunchParamsRetrieveError on affected devices.
 // See: https://github.com/Telegram-Mini-Apps/tma.js/issues/683
 if (typeof (Object as { hasOwn?: unknown }).hasOwn !== 'function') {
+  // Must NOT delegate to Object.hasOwn: on the very devices that lack it the
+  // fallback would be calling itself, so the polyfill recursed until the stack
+  // blew instead of fixing anything. hasOwnProperty is the actual primitive,
+  // and going through Object.prototype survives objects created with
+  // Object.create(null).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (Object as any).hasOwn = (obj: object, prop: PropertyKey): boolean => Object.hasOwn(obj, prop);
 }
