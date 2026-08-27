@@ -23,7 +23,9 @@ import SubscriptionListCard from '../components/subscription/SubscriptionListCar
 import { DeviceLimitSheet } from '../components/subscription/DeviceLimitSheet';
 import { API } from '../config/constants';
 import { ChevronRightIcon, StarIcon } from '@/components/icons';
+import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 import type { LteTrafficInfo } from '../types';
+import { safeLocal } from '../utils/safeStorage';
 
 export default function Dashboard() {
   const { t } = useTranslation();
@@ -170,7 +172,7 @@ export default function Dashboard() {
         is_unlimited: data.is_unlimited,
         lte_traffic: data.lte_traffic ?? null,
       });
-      localStorage.setItem(
+      safeLocal.setItem(
         `traffic_refresh_ts_${subscription?.id ?? 'default'}`,
         Date.now().toString(),
       );
@@ -208,7 +210,7 @@ export default function Dashboard() {
     if (hasAutoRefreshed.current) return;
     hasAutoRefreshed.current = true;
 
-    const lastRefresh = localStorage.getItem(`traffic_refresh_ts_${subscription?.id ?? 'default'}`);
+    const lastRefresh = safeLocal.getItem(`traffic_refresh_ts_${subscription?.id ?? 'default'}`);
     const now = Date.now();
     const cacheMs = API.TRAFFIC_CACHE_MS;
 
@@ -370,18 +372,18 @@ export default function Dashboard() {
       {/* Subscription Status Card — hidden in multi-tariff (managed via /subscriptions) */}
       {!isMultiTariff &&
         (subLoading ? (
-          <div className="bento-card">
+          <SkeletonGroup className="bento-card">
             <div className="mb-4 flex items-center justify-between">
-              <div className="skeleton h-5 w-20" />
-              <div className="skeleton h-6 w-16 rounded-full" />
+              <Skeleton className="h-5 w-20" />
+              <Skeleton className="h-6 w-16 rounded-full" />
             </div>
-            <div className="skeleton mb-3 h-10 w-32" />
-            <div className="skeleton mb-3 h-4 w-40" />
-            <div className="skeleton h-3 w-full rounded-full" />
+            <Skeleton className="mb-3 h-10 w-32" />
+            <Skeleton className="mb-3 h-4 w-40" />
+            <Skeleton className="h-3 w-full rounded-full" />
             <div className="mt-5">
-              <div className="skeleton h-12 w-full rounded-xl" />
+              <Skeleton className="h-12 w-full rounded-xl" />
             </div>
-          </div>
+          </SkeletonGroup>
         ) : subscription?.is_expired ||
           subscription?.status === 'disabled' ||
           subscription?.is_limited ? (
