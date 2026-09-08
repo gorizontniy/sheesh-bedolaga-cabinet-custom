@@ -448,8 +448,8 @@ export default function ConnectedAccounts() {
     onSuccess: () => {
       showToast({ type: 'success', message: t('profile.emailResendSuccess') });
     },
-    onError: (err: { response?: { data?: { detail?: string } } }) => {
-      showToast({ type: 'error', message: err.response?.data?.detail || t('common.error') });
+    onError: (err: unknown) => {
+      showToast({ type: 'error', message: getApiErrorMessage(err, t('common.error')) });
     },
   });
 
