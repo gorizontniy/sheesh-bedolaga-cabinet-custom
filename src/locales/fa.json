@@ -2501,6 +2501,8 @@
       "noPeriodsHint": "هیچ دوره‌ای اضافه نشده. حداقل یک دوره اضافه کنید.",
       "daysShort": "روز",
       "serversTitle": "سرورها",
+      "squadTrafficLimit": "سهمیه این سرور:",
+      "squadTrafficLimitHint": "گیگابایت در ۳۰ روز؛ خالی یعنی سقف خود تعرفه",
       "externalSquadTitle": "گروه خارجی",
       "externalSquadHint": "یک گروه خارجی Remnawave برای کاربران این تعرفه تعیین کنید. هنگام ایجاد اشتراک، کاربر به طور خودکار به گروه انتخاب شده اضافه می‌شود.",
       "noExternalSquad": "بدون گروه خارجی",

@@ -3449,6 +3449,8 @@
       "noPeriodsHint": "No added periods. Add at least one period.",
       "daysShort": "d.",
       "serversTitle": "Servers",
+      "squadTrafficLimit": "Quota for this server:",
+      "squadTrafficLimitHint": "GB per 30 days; empty falls back to the tariff limit",
       "externalSquadTitle": "External Squad",
       "externalSquadHint": "Assign a Remnawave external squad for users on this tariff. When a subscription is created, the user will be automatically added to the selected squad.",
       "noExternalSquad": "No external squad",

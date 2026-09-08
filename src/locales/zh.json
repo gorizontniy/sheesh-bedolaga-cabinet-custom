@@ -2567,6 +2567,8 @@
       "noPeriodsHint": "没有添加的周期。请至少添加一个周期。",
       "daysShort": "天",
       "serversTitle": "服务器",
+      "squadTrafficLimit": "此服务器配额：",
+      "squadTrafficLimitHint": "GB / 30 天；留空则用套餐总限额",
       "externalSquadTitle": "外部小组",
       "externalSquadHint": "为此套餐的用户分配Remnawave外部小组。创建订阅时，用户将自动添加到所选小组。",
       "noExternalSquad": "无外部小组",

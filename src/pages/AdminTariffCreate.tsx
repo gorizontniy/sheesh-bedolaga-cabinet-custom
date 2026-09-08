@@ -10,6 +10,7 @@ import {
   type PeriodPrice,
   type ServerInfo,
   type ExternalSquadInfo,
+  type ServerTrafficLimit,
 } from '../api/tariffs';
 import { AdminBackButton } from '../components/admin';
 import { createNumberInputHandler, toNumber } from '../utils/inputHelpers';
@@ -48,6 +49,12 @@ export default function AdminTariffCreate() {
   const [tierLevel, setTierLevel] = useState<number | ''>(1);
   const [periodPrices, setPeriodPrices] = useState<PeriodPrice[]>([]);
   const [selectedSquads, setSelectedSquads] = useState<string[]>([]);
+  // Квота LTE/WL на сквад. Форма ОБЯЗАНА присылать полную карту: бэкенд
+  // перезаписывает server_traffic_limits целиком, поэтому частичная отправка
+  // стёрла бы квоты остальных сквадов.
+  const [serverTrafficLimits, setServerTrafficLimits] = useState<
+    Record<string, ServerTrafficLimit>
+  >({});
   const [selectedExternalSquad, setSelectedExternalSquad] = useState<string | null>(null);
   const [selectedPromoGroups, setSelectedPromoGroups] = useState<number[]>([]);
   const [dailyPriceKopeks, setDailyPriceKopeks] = useState<number | ''>(0);
@@ -119,6 +126,7 @@ export default function AdminTariffCreate() {
       setTierLevel(data.tier_level || 1);
       setPeriodPrices(data.period_prices?.length ? data.period_prices : []);
       setSelectedSquads(data.allowed_squads || []);
+      setServerTrafficLimits(data.server_traffic_limits || {});
       setSelectedExternalSquad(data.external_squad_uuid || null);
       setSelectedPromoGroups(
         data.promo_groups?.filter((pg) => pg.is_selected).map((pg) => pg.id) || [],
@@ -172,6 +180,7 @@ export default function AdminTariffCreate() {
       tier_level: toNumber(tierLevel, 1),
       period_prices: isDaily ? [] : periodPrices.filter((p) => p.price_kopeks >= 0),
       allowed_squads: selectedSquads,
+      server_traffic_limits: serverTrafficLimits,
       external_squad_uuid: selectedExternalSquad || null,
       promo_group_ids: selectedPromoGroups,
       traffic_topup_enabled: trafficTopupEnabled,
@@ -192,9 +201,30 @@ export default function AdminTariffCreate() {
   };
 
   const toggleServer = (uuid: string) => {
-    setSelectedSquads((prev) =>
-      prev.includes(uuid) ? prev.filter((s) => s !== uuid) : [...prev, uuid],
-    );
+    setSelectedSquads((prev) => {
+      const wasSelected = prev.includes(uuid);
+      if (wasSelected) {
+        // Квота без сквада бессмысленна и всплыла бы при повторном включении.
+        setServerTrafficLimits((limits) => {
+          const { [uuid]: _dropped, ...rest } = limits;
+          return rest;
+        });
+      }
+      return wasSelected ? prev.filter((s) => s !== uuid) : [...prev, uuid];
+    });
+  };
+
+  const setSquadTrafficLimit = (uuid: string, raw: string) => {
+    setServerTrafficLimits((prev) => {
+      const gb = Number(raw);
+      // Пусто или 0 — квоты нет; ключ убираем, а не пишем ноль, иначе тариф
+      // получит «ноль гигабайт» вместо «без ограничения».
+      if (raw.trim() === '' || !Number.isFinite(gb) || gb <= 0) {
+        const { [uuid]: _dropped, ...rest } = prev;
+        return rest;
+      }
+      return { ...prev, [uuid]: { traffic_limit_gb: Math.floor(gb) } };
+    });
   };
 
   const togglePromoGroup = (groupId: number) => {
@@ -752,39 +782,58 @@ export default function AdminTariffCreate() {
               <div className="space-y-2">
                 {servers.map((server: ServerInfo) => {
                   const isSelected = selectedSquads.includes(server.squad_uuid);
+                  const squadLimitGb =
+                    serverTrafficLimits[server.squad_uuid]?.traffic_limit_gb ?? '';
                   return (
-                    <button
-                      key={server.id}
-                      type="button"
-                      onClick={() => toggleServer(server.squad_uuid)}
-                      className={`flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors ${
-                        isSelected
-                          ? isDaily
-                            ? 'bg-warning-500/20 text-warning-300'
-                            : 'bg-accent-500/20 text-accent-300'
-                          : 'bg-dark-800 text-dark-300 hover:bg-dark-700'
-                      }`}
-                    >
-                      <div
-                        className={`flex h-5 w-5 items-center justify-center rounded ${
+                    <div key={server.id} className="space-y-1">
+                      <button
+                        type="button"
+                        onClick={() => toggleServer(server.squad_uuid)}
+                        className={`flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors ${
                           isSelected
                             ? isDaily
-                              ? 'bg-warning-500 text-white'
-                              : 'bg-accent-500 text-on-accent'
-                            : 'bg-dark-600'
+                              ? 'bg-warning-500/20 text-warning-300'
+                              : 'bg-accent-500/20 text-accent-300'
+                            : 'bg-dark-800 text-dark-300 hover:bg-dark-700'
                         }`}
                       >
-                        {isSelected && <CheckIcon />}
-                      </div>
-                      <span className="flex-1 text-sm font-medium">
-                        <Twemoji options={{ className: 'twemoji', folder: 'svg', ext: '.svg' }}>
-                          {server.display_name}
-                        </Twemoji>
-                      </span>
-                      {server.country_code && (
-                        <span className="text-xs text-dark-500">{server.country_code}</span>
+                        <div
+                          className={`flex h-5 w-5 items-center justify-center rounded ${
+                            isSelected
+                              ? isDaily
+                                ? 'bg-warning-500 text-white'
+                                : 'bg-accent-500 text-on-accent'
+                              : 'bg-dark-600'
+                          }`}
+                        >
+                          {isSelected && <CheckIcon />}
+                        </div>
+                        <span className="flex-1 text-sm font-medium">
+                          <Twemoji options={{ className: 'twemoji', folder: 'svg', ext: '.svg' }}>
+                            {server.display_name}
+                          </Twemoji>
+                        </span>
+                        {server.country_code && (
+                          <span className="text-xs text-dark-500">{server.country_code}</span>
+                        )}
+                      </button>
+                      {isSelected && (
+                        <div className="flex flex-wrap items-center gap-2 pl-8 text-xs text-dark-400">
+                          <span>{t('admin.tariffs.squadTrafficLimit')}</span>
+                          <input
+                            type="number"
+                            min={0}
+                            value={squadLimitGb}
+                            onChange={(e) =>
+                              setSquadTrafficLimit(server.squad_uuid, e.target.value)
+                            }
+                            className="input w-24 py-1 text-xs"
+                            placeholder="∞"
+                          />
+                          <span>{t('admin.tariffs.squadTrafficLimitHint')}</span>
+                        </div>
                       )}
-                    </button>
+                    </div>
                   );
                 })}
               </div>
