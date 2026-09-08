@@ -132,7 +132,7 @@ export default function SubscriptionCardActive({
               >
                 &#8734;
               </div>
-              <div className="mt-1 font-mono text-[11px] text-dark-50/30">
+              <div className="mt-1 font-mono text-[11px] text-dark-400">
                 {formatTraffic(usedGb)} {t('dashboard.usedSuffix')}
               </div>
             </>
@@ -140,9 +140,9 @@ export default function SubscriptionCardActive({
             <>
               <div className="font-display text-[38px] font-extrabold leading-none tracking-tight text-dark-50">
                 {usedPercent > 0 && usedPercent < 1 ? '<1' : animatedPercent.toFixed(0)}
-                <span className="ml-px text-lg font-medium text-dark-50/35">%</span>
+                <span className="ml-px text-lg font-medium text-dark-400">%</span>
               </div>
-              <div className="mt-0.5 font-mono text-[11px] text-dark-50/30">
+              <div className="mt-0.5 font-mono text-[11px] text-dark-400">
                 {formatTraffic(usedGb)} / {formatTraffic(subscription.traffic_limit_gb)}
               </div>
             </>
@@ -194,7 +194,7 @@ export default function SubscriptionCardActive({
                   <div className="font-display text-[34px] font-extrabold leading-none tracking-tight text-accent-300">
                     &#8734;
                   </div>
-                  <div className="mt-1 font-mono text-[11px] text-dark-50/35">
+                  <div className="mt-1 font-mono text-[11px] text-dark-400">
                     {formatTraffic(lteUsedGb)}
                   </div>
                 </>
@@ -202,9 +202,9 @@ export default function SubscriptionCardActive({
                 <>
                   <div className="font-display text-[34px] font-extrabold leading-none tracking-tight text-dark-50">
                     {ltePercent > 0 && ltePercent < 1 ? '<1' : animatedLtePercent.toFixed(0)}
-                    <span className="ml-px text-lg font-medium text-dark-50/35">%</span>
+                    <span className="ml-px text-lg font-medium text-dark-400">%</span>
                   </div>
-                  <div className="mt-0.5 font-mono text-[11px] text-dark-50/35">
+                  <div className="mt-0.5 font-mono text-[11px] text-dark-400">
                     {formatTraffic(lteUsedGb)} / {formatTraffic(lteLimitGb)}
                   </div>
                 </>
@@ -224,7 +224,7 @@ export default function SubscriptionCardActive({
           >
             Докупить LTE
           </Link>
-          <div className="mt-2 text-[10px] leading-snug text-dark-50/40">
+          <div className="mt-2 text-[10px] leading-snug text-dark-400">
             Обходы белых списков (WL) считаются как LTE трафик
           </div>
         </div>
@@ -259,7 +259,7 @@ export default function SubscriptionCardActive({
           <div className="min-w-0 truncate text-base font-bold leading-tight tracking-tight text-dark-50">
             {subscription.tariff_name || t('subscription.currentPlan')}
           </div>
-          <div className="mt-0.5 font-mono text-[10px] text-dark-50/30">
+          <div className="mt-0.5 font-mono text-[10px] text-dark-400">
             {t('dashboard.validUntil', { date: formattedDate })}
           </div>
         </Link>
@@ -275,7 +275,7 @@ export default function SubscriptionCardActive({
                 : `1px solid ${g.innerBorder}`,
           }}
         >
-          <div className="mb-1 flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-dark-50/35">
+          <div className="mb-1 flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-dark-400">
             <div
               className="flex h-6 w-6 items-center justify-center rounded-[7px] transition-colors duration-300"
               style={{
@@ -300,9 +300,7 @@ export default function SubscriptionCardActive({
             >
               {daysLeft}
             </span>
-            <span className="text-xs font-medium text-dark-50/25">
-              {t('subscription.daysShort')}
-            </span>
+            <span className="text-xs font-medium text-dark-400">{t('subscription.daysShort')}</span>
           </div>
         </div>
       </div>
@@ -312,7 +310,7 @@ export default function SubscriptionCardActive({
         <button
           onClick={() => refreshTrafficMutation.mutate()}
           disabled={refreshTrafficMutation.isPending || trafficRefreshCooldown > 0}
-          className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium text-dark-50/35 transition-colors hover:bg-dark-50/[0.05] hover:text-dark-50/50 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium text-dark-400 transition-colors hover:bg-dark-50/[0.05] hover:text-dark-50/50 disabled:cursor-not-allowed disabled:opacity-50"
           aria-label={t('common.refresh')}
         >
           <RefreshIcon
@@ -322,7 +320,7 @@ export default function SubscriptionCardActive({
         </button>
         <Link
           to={`/subscriptions/${subscription.id}`}
-          className="text-[11px] font-medium text-dark-50/25 transition-colors hover:text-dark-50/40"
+          className="text-[11px] font-medium text-accent-400 transition-colors hover:text-accent-300"
         >
           {t('dashboard.viewSubscription')} &rarr;
         </Link>
@@ -335,10 +333,10 @@ export default function SubscriptionCardActive({
           style={{ background: g.innerBg, border: `1px solid ${g.innerBorder}` }}
         >
           <div className="mb-2.5 flex items-center justify-between">
-            <span className="text-[11px] font-medium uppercase tracking-wider text-dark-50/40">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-dark-400">
               {t('dashboard.usageLast14Days')}
             </span>
-            <span className="font-mono text-[11px] text-dark-50/25">
+            <span className="font-mono text-[11px] text-dark-400">
               {t('dashboard.maxUsage', { amount: formatTraffic(Math.max(...dailyUsage)) })}
             </span>
           </div>
