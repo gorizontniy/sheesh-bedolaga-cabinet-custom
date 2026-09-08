@@ -9,7 +9,11 @@ import { usePromoDiscount } from '../../../hooks/usePromoDiscount';
 import { dailyPriceQuote } from './dailyPrice';
 import { usePlatform } from '../../../platform';
 import { openPaymentUrl } from '../../../utils/openPaymentUrl';
-import { getMonthlyPriceKopeks, getSavingsVsMonthlyKopeks } from '../../../utils/pricing';
+import {
+  getMonthlyPriceKopeks,
+  getSavingsPercent,
+  getSavingsVsMonthlyKopeks,
+} from '../../../utils/pricing';
 import InsufficientBalancePrompt from '../../InsufficientBalancePrompt';
 import type { Tariff, TariffPeriod } from '../../../types';
 import { BestValueBadge } from '../BestValueBadge';
@@ -366,6 +370,7 @@ export function TariffPurchaseForm({
                         period.days,
                         monthlyPrice,
                       );
+                      const savingsPct = getSavingsPercent(displayPrice, savings);
 
                       return (
                         <button
@@ -409,9 +414,14 @@ export function TariffPurchaseForm({
                           )}
                           {savings !== null && (
                             <div className="mt-1 text-xs font-medium text-success-400">
-                              {t('subscription.savingsVsMonthly', {
-                                amount: formatPrice(savings),
-                              })}
+                              {savingsPct !== null
+                                ? t('subscription.savingsVsMonthlyPct', {
+                                    amount: formatPrice(savings),
+                                    percent: savingsPct,
+                                  })
+                                : t('subscription.savingsVsMonthly', {
+                                    amount: formatPrice(savings),
+                                  })}
                             </div>
                           )}
                           {/* Под ценой, а не в углу: правый верхний угол занят скидкой. */}

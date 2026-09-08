@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getMonthlyPriceKopeks, getSavingsVsMonthlyKopeks } from './pricing';
+import { getMonthlyPriceKopeks, getSavingsPercent, getSavingsVsMonthlyKopeks } from './pricing';
 
 describe('getMonthlyPriceKopeks', () => {
   it('hides the monthly rate for periods of a month or shorter', () => {
@@ -39,5 +39,20 @@ describe('getSavingsVsMonthlyKopeks', () => {
     expect(getSavingsVsMonthlyKopeks(75000, 90, null)).toBeNull();
     expect(getSavingsVsMonthlyKopeks(90000, 90, 30000)).toBeNull();
     expect(getSavingsVsMonthlyKopeks(Number.NaN, 90, 30000)).toBeNull();
+  });
+});
+
+describe('getSavingsPercent', () => {
+  // Живые цены «Стандартного» и Premium: бейдж пишет 6%, а выгода за срок — 19%.
+  it('считает долю экономии от помесячной базы', () => {
+    expect(getSavingsPercent(564150, 132150)).toBe(19);
+    expect(getSavingsPercent(245000, 115000)).toBe(32);
+    expect(getSavingsPercent(75000, 15000)).toBe(17);
+  });
+
+  it('молчит там, где экономии нет', () => {
+    expect(getSavingsPercent(30000, null)).toBeNull();
+    expect(getSavingsPercent(30000, 0)).toBeNull();
+    expect(getSavingsPercent(Number.NaN, 100)).toBeNull();
   });
 });

@@ -34,3 +34,19 @@ export function getSavingsVsMonthlyKopeks(
   const savings = Math.round(baseline - priceKopeks);
   return savings > 0 ? savings : null;
 }
+
+/**
+ * Доля экономии относительно помесячной оплаты, в целых процентах.
+ *
+ * Зачем отдельно от процента на бейдже: бейдж показывает скидку промогруппы,
+ * а это — выгода за СРОК, и величины разные. На годе бейдж может писать 6%,
+ * тогда как против помесячной оплаты человек экономит 19%. Меньшая из двух
+ * цифр набрана крупно, поэтому вторую надо назвать вслух.
+ */
+export function getSavingsPercent(priceKopeks: number, savingsKopeks: number | null): number | null {
+  if (savingsKopeks === null || !Number.isFinite(priceKopeks)) return null;
+  const baseline = priceKopeks + savingsKopeks;
+  if (baseline <= 0) return null;
+  const pct = Math.round((savingsKopeks / baseline) * 100);
+  return pct > 0 ? pct : null;
+}
