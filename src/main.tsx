@@ -27,7 +27,11 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { initLogoPreload } from './api/branding';
 import { checkBackendOnStartup } from './api/health';
 import { getCachedFullscreenEnabled, isTelegramMobile } from './hooks/useTelegramSDK';
-import { applyTelegramLanguage } from './i18n';
+import { applyTelegramLanguage, i18nReady } from './i18n';
+import { themeColorsQueryOptions } from './api/themeColors';
+import { applyThemeColors } from './hooks/useThemeColors';
+import { readThemeColorsHint } from './utils/themeColorsHint';
+import { UI } from './config/constants';
 import './styles/globals.css';
 
 // Harden the global encoders against lone UTF-16 surrogates (truncated emoji in
@@ -41,17 +45,14 @@ installEncodingSurrogateGuard();
 // Without this, init() and any launch-params retrieval below throw
 // LaunchParamsRetrieveError on affected devices.
 // See: https://github.com/Telegram-Mini-Apps/tma.js/issues/683
-// The polyfill must not go through Object.hasOwn in any form: on the devices
-// that lack it, the assignment below has just made Object.hasOwn point at this
-// very arrow, so calling it would recurse until the stack blew. hasOwnProperty
-// is the real primitive. It is destructured deliberately — biome's
-// `useObjectHasOwn` autofix rewrites `Object.prototype.hasOwnProperty.call(...)`
-// back into `Object.hasOwn(...)`, which is how the recursion got here.
-const objectCtor = Object as { hasOwn?: (obj: object, prop: PropertyKey) => boolean };
-if (typeof objectCtor.hasOwn !== 'function') {
-  const nativeHasOwnProperty = Object.prototype.hasOwnProperty;
-  objectCtor.hasOwn = (obj: object, prop: PropertyKey): boolean =>
-    nativeHasOwnProperty.call(obj, prop);
+// Тело полифила берёт hasOwnProperty из прототипа заранее: автофикс biome
+// (noPrototypeBuiltins) переписывает прямой вызов на Object.hasOwn(), то есть на
+// вызов самого полифила — бесконечная рекурсия и падение tsc на target ниже es2022.
+const objectHasOwnProperty = Object.prototype.hasOwnProperty;
+if (typeof (Object as { hasOwn?: unknown }).hasOwn !== 'function') {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (Object as any).hasOwn = (obj: object, prop: PropertyKey): boolean =>
+    objectHasOwnProperty.call(obj, prop);
 }
 
 // Only initialize Telegram SDK when running inside Telegram
@@ -59,6 +60,11 @@ const isTelegramEnv =
   !!(window as unknown as Record<string, unknown>).TelegramWebviewProxy ||
   location.hash.includes('tgWebApp') ||
   location.search.includes('tgWebApp');
+
+// Язык из клиента Telegram может отличаться от определённого по navigator, и его
+// словарь тянется отдельным чанком. Точка входа ждёт и его тоже — иначе смена
+// языка сразу после старта снова покажет сырые ключи.
+let telegramLanguageReady: Promise<void> = Promise.resolve();
 
 const HMR_KEY = '__tg_sdk_initialized';
 const alreadyInitialized = (window as unknown as Record<string, unknown>)[HMR_KEY] === true;
@@ -73,7 +79,7 @@ if (isTelegramEnv && !alreadyInitialized) {
     clearStaleSessionIfNeeded(getTelegramInitData());
 
     // Adopt the user's Telegram client language on first run (no explicit choice yet).
-    applyTelegramLanguage();
+    telegramLanguageReady = applyTelegramLanguage();
 
     // Each mount in its own try/catch so one failure doesn't block others.
     // mountMiniApp() internally mounts themeParams in SDK v3,
@@ -142,12 +148,35 @@ const queryClient = new QueryClient({
   },
 });
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <ErrorBoundary level="app">
-      <QueryClientProvider client={queryClient}>
-        <AppWithNavigator />
-      </QueryClientProvider>
-    </ErrorBoundary>
-  </React.StrictMode>,
-);
+// Палитра оператора для самого первого визита: подсказки в localStorage ещё нет,
+// и без ожидания первый кадр ушёл бы в цветах по умолчанию (повторные визиты
+// закрывает инлайн-скрипт index.html). Ответ ставится на :root до рендера и
+// попадает в подсказку. Ждём не дольше таймаута: мёртвый бэкенд не должен
+// держать пустой экран, getColors на ошибке сам отдаёт дефолт.
+const themeColorsReady: Promise<void> = readThemeColorsHint()
+  ? Promise.resolve()
+  : Promise.race([
+      queryClient
+        .fetchQuery(themeColorsQueryOptions())
+        .then((colors) => applyThemeColors(colors))
+        .catch(() => {}),
+      new Promise<void>((resolve) => setTimeout(resolve, UI.THEME_COLORS_FIRST_PAINT_TIMEOUT_MS)),
+    ]);
+
+// Рисуем только после словарей. Локали лежат в отдельных ленивых чанках, а
+// react.useSuspense выключен: без ожидания первая отрисовка на холодном кэше
+// уходила с сырыми ключами (`auth.login`, `auth.email`), а ключи с инлайн-
+// дефолтом — по-английски, отчего форма выглядела наполовину переведённой.
+// i18nReady не реджектится и сам снимается по таймауту, так что не приехавший
+// чанк даёт непереведённый текст, а не белый экран.
+void Promise.all([i18nReady, telegramLanguageReady, themeColorsReady]).then(() => {
+  ReactDOM.createRoot(document.getElementById('root')!).render(
+    <React.StrictMode>
+      <ErrorBoundary level="app">
+        <QueryClientProvider client={queryClient}>
+          <AppWithNavigator />
+        </QueryClientProvider>
+      </ErrorBoundary>
+    </React.StrictMode>,
+  );
+});

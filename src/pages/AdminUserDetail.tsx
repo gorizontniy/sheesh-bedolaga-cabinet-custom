@@ -28,6 +28,8 @@ import { ActivityTab } from '../components/admin/userDetail/ActivityTab';
 import { TicketsTab } from '../components/admin/userDetail/TicketsTab';
 import { InfoTab } from '../components/admin/userDetail/InfoTab';
 import { SubscriptionTab } from '../components/admin/userDetail/SubscriptionTab';
+import { buildReachabilityLink } from '../components/admin/reachability/deepLink';
+import { useReachabilityAvailable } from '../components/admin/reachability/useReachabilityStatus';
 import { getApiErrorMessage } from '../utils/api-error';
 import { toNumber } from '../utils/inputHelpers';
 import { usePermissionStore } from '../store/permissions';
@@ -132,6 +134,12 @@ export default function AdminUserDetail() {
   const [requestHistorySubId, setRequestHistorySubId] = useState<number | null>(null);
 
   const userId = id ? parseInt(id, 10) : null;
+  // Ярлык «Проверить через операторов РФ» у подписки: право запуска + включённая интеграция.
+  const reachabilityAvailable = useReachabilityAvailable();
+  const reachabilityLink =
+    hasPermission('reachability:run') && reachabilityAvailable && userId && !Number.isNaN(userId)
+      ? buildReachabilityLink({ mode: 'vless', userId })
+      : null;
 
   // React Query owns the main user fetch: caching across navigations + auto-loading
   // state. loadUser is kept as a thin refetch wrapper so the 25+ mutation handlers
@@ -1004,6 +1012,7 @@ export default function AdminUserDetail() {
             hasPermission={hasPermission}
             formatDate={formatDate}
             locale={locale}
+            reachabilityLink={reachabilityLink}
           />
         )}
 

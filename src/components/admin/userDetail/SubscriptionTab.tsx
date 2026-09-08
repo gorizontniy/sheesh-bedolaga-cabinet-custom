@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router';
 import {
   BackIcon,
   CheckIcon,
@@ -150,6 +151,8 @@ export interface SubscriptionTabProps {
   hasPermission: (perm: string) => boolean;
   formatDate: (date: string | null) => string;
   locale: string;
+  /** Ссылка на VLESS-тест конфигов этого пользователя; null — раздел недоступен. */
+  reachabilityLink?: string | null;
 }
 
 export function SubscriptionTab(props: SubscriptionTabProps) {
@@ -678,6 +681,12 @@ export function SubscriptionTab(props: SubscriptionTabProps) {
                 </div>
               )}
             </div>
+          )}
+
+          {props.reachabilityLink && (
+            <Link to={props.reachabilityLink} className="btn-secondary w-full text-center">
+              {t('admin.reachability.shortcuts.checkSubscription')}
+            </Link>
           )}
 
           {/* Actions */}
