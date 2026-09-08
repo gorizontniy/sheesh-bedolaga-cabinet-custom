@@ -414,6 +414,11 @@
     "daysBeforeExpiry_one": "{{count}} day before expiry",
     "daysBeforeExpiry_other": "{{count}} days before expiry",
     "selectPeriod": "Select Period",
+    "savingsVsMonthly": "You save {{amount}}",
+    "periodLabel": {
+      "popular": "Popular",
+      "bestValue": "Best value"
+    },
     "noPeriodsAvailable": "No available periods for renewal",
     "noPeriodsAvailableHint": "The administrator has changed this plan's settings. Please choose a different plan to renew your subscription.",
     "chooseDifferentTariff": "Choose a different plan",

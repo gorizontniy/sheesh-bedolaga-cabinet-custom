@@ -8,7 +8,7 @@ import { useCurrency } from '../../../hooks/useCurrency';
 import { usePromoDiscount } from '../../../hooks/usePromoDiscount';
 import { usePlatform } from '../../../platform';
 import { openPaymentUrl } from '../../../utils/openPaymentUrl';
-import { getMonthlyPriceKopeks } from '../../../utils/pricing';
+import { getMonthlyPriceKopeks, getSavingsVsMonthlyKopeks } from '../../../utils/pricing';
 import InsufficientBalancePrompt from '../../InsufficientBalancePrompt';
 import type { Tariff, TariffPeriod } from '../../../types';
 
@@ -315,61 +315,114 @@ export function TariffPurchaseForm({
           <div>
             <div className="mb-3 text-sm text-dark-400">{t('subscription.selectPeriod')}</div>
 
-            {tariff.periods.length > 0 && !useCustomDays && (
-              <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {tariff.periods.map((period) => {
-                  const promoPeriod = applyPromoDiscount(
-                    period.price_kopeks,
-                    period.original_price_kopeks,
+            {tariff.periods.length > 0 &&
+              !useCustomDays &&
+              (() => {
+                // Базой для «вы экономите» служит собственный месячный период
+                // тарифа. Считаем по той же цене, что видит покупатель (с промо),
+                // иначе экономия разъедется с ценами на соседних карточках.
+                const monthlyPeriod = tariff.periods.find((p) => p.days === 30);
+                const monthlyPrice = monthlyPeriod
+                  ? applyPromoDiscount(
+                      monthlyPeriod.price_kopeks,
+                      monthlyPeriod.original_price_kopeks,
+                    ).price
+                  : null;
+                // «Выгодный» достаётся периоду с наибольшей экономией, а не просто
+                // самому длинному: если ставки поменяют, ярлык переедет сам.
+                let bestSavingsDays: number | null = null;
+                let bestSavings = 0;
+                for (const p of tariff.periods) {
+                  const s = getSavingsVsMonthlyKopeks(
+                    applyPromoDiscount(p.price_kopeks, p.original_price_kopeks).price,
+                    p.days,
+                    monthlyPrice,
                   );
-                  const displayDiscount = promoPeriod.percent;
-                  const displayOriginal = promoPeriod.original;
-                  const displayPrice = promoPeriod.price;
-                  const displayPerMonth = getMonthlyPriceKopeks(displayPrice, period.days);
+                  if (s !== null && s > bestSavings) {
+                    bestSavings = s;
+                    bestSavingsDays = p.days;
+                  }
+                }
 
-                  return (
-                    <button
-                      key={period.days}
-                      onClick={() => {
-                        setSelectedTariffPeriod(period);
-                        setUseCustomDays(false);
-                      }}
-                      className={`relative rounded-xl border p-4 text-left transition-all ${
-                        selectedTariffPeriod?.days === period.days && !useCustomDays
-                          ? 'border-accent-500 bg-accent-500/10'
-                          : 'border-dark-700/50 bg-dark-800/50 hover:border-dark-600'
-                      }`}
-                    >
-                      {displayDiscount && displayDiscount > 0 && (
-                        <div
-                          className={`absolute -right-2 -top-2 rounded-full px-2 py-0.5 text-xs font-medium text-white ${
-                            promoPeriod.isPromoGroup ? 'bg-success-500' : 'bg-warning-500'
+                return (
+                  <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                    {tariff.periods.map((period) => {
+                      const promoPeriod = applyPromoDiscount(
+                        period.price_kopeks,
+                        period.original_price_kopeks,
+                      );
+                      const displayDiscount = promoPeriod.percent;
+                      const displayOriginal = promoPeriod.original;
+                      const displayPrice = promoPeriod.price;
+                      const displayPerMonth = getMonthlyPriceKopeks(displayPrice, period.days);
+                      const savings = getSavingsVsMonthlyKopeks(
+                        displayPrice,
+                        period.days,
+                        monthlyPrice,
+                      );
+                      const label =
+                        bestSavingsDays === period.days
+                          ? t('subscription.periodLabel.bestValue')
+                          : period.days === 90
+                            ? t('subscription.periodLabel.popular')
+                            : null;
+
+                      return (
+                        <button
+                          key={period.days}
+                          onClick={() => {
+                            setSelectedTariffPeriod(period);
+                            setUseCustomDays(false);
+                          }}
+                          className={`relative rounded-xl border p-4 text-left transition-all ${
+                            selectedTariffPeriod?.days === period.days && !useCustomDays
+                              ? 'border-accent-500 bg-accent-500/10'
+                              : 'border-dark-700/50 bg-dark-800/50 hover:border-dark-600'
                           }`}
                         >
-                          -{displayDiscount}%
-                        </div>
-                      )}
-                      <div className="text-lg font-semibold text-dark-100">{period.label}</div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-accent-400">
-                          {formatPrice(displayPrice)}
-                        </span>
-                        {displayOriginal && displayOriginal > displayPrice && (
-                          <span className="text-sm text-dark-500 line-through">
-                            {formatPrice(displayOriginal)}
-                          </span>
-                        )}
-                      </div>
-                      {displayPerMonth !== null && (
-                        <div className="mt-1 text-xs text-dark-500">
-                          {formatPrice(displayPerMonth)}/{t('subscription.month')}
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+                          {label && (
+                            <div className="absolute -left-2 -top-2 rounded-full bg-accent-500 px-2 py-0.5 text-xs font-medium text-white">
+                              {label}
+                            </div>
+                          )}
+                          {displayDiscount && displayDiscount > 0 && (
+                            <div
+                              className={`absolute -right-2 -top-2 rounded-full px-2 py-0.5 text-xs font-medium text-white ${
+                                promoPeriod.isPromoGroup ? 'bg-success-500' : 'bg-warning-500'
+                              }`}
+                            >
+                              -{displayDiscount}%
+                            </div>
+                          )}
+                          <div className="text-lg font-semibold text-dark-100">{period.label}</div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-accent-400">
+                              {formatPrice(displayPrice)}
+                            </span>
+                            {displayOriginal && displayOriginal > displayPrice && (
+                              <span className="text-sm text-dark-500 line-through">
+                                {formatPrice(displayOriginal)}
+                              </span>
+                            )}
+                          </div>
+                          {displayPerMonth !== null && (
+                            <div className="mt-1 text-xs text-dark-500">
+                              {formatPrice(displayPerMonth)}/{t('subscription.month')}
+                            </div>
+                          )}
+                          {savings !== null && (
+                            <div className="mt-1 text-xs font-medium text-success-400">
+                              {t('subscription.savingsVsMonthly', {
+                                amount: formatPrice(savings),
+                              })}
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
 
             {/* No periods available fallback */}
             {tariff.periods.length === 0 &&

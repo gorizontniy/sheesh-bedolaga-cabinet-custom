@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getMonthlyPriceKopeks } from './pricing';
+import { getMonthlyPriceKopeks, getSavingsVsMonthlyKopeks } from './pricing';
 
 describe('getMonthlyPriceKopeks', () => {
   it('hides the monthly rate for periods of a month or shorter', () => {
@@ -22,5 +22,22 @@ describe('getMonthlyPriceKopeks', () => {
     expect(getMonthlyPriceKopeks(Number.NaN, 90)).toBeNull();
     expect(getMonthlyPriceKopeks(30000, Number.NaN)).toBeNull();
     expect(getMonthlyPriceKopeks(30000, Number.POSITIVE_INFINITY)).toBeNull();
+  });
+});
+
+describe('getSavingsVsMonthlyKopeks', () => {
+  // Живые цены тарифа «Стандартный» на 2026-09-08.
+  it('считает экономию против помесячной оплаты', () => {
+    expect(getSavingsVsMonthlyKopeks(75000, 90, 30000)).toBe(15000);
+    expect(getSavingsVsMonthlyKopeks(144000, 180, 30000)).toBe(36000);
+    expect(getSavingsVsMonthlyKopeks(245000, 360, 30000)).toBe(115000);
+  });
+
+  it('молчит там, где сравнивать не с чем или экономии нет', () => {
+    expect(getSavingsVsMonthlyKopeks(30000, 30, 30000)).toBeNull();
+    expect(getSavingsVsMonthlyKopeks(15000, 7, 30000)).toBeNull();
+    expect(getSavingsVsMonthlyKopeks(75000, 90, null)).toBeNull();
+    expect(getSavingsVsMonthlyKopeks(90000, 90, 30000)).toBeNull();
+    expect(getSavingsVsMonthlyKopeks(Number.NaN, 90, 30000)).toBeNull();
   });
 });
