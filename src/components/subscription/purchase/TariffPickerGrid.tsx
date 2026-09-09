@@ -267,7 +267,7 @@ export function TariffPickerGrid({
                               {formatPrice(promoPeriod.original)}
                             </span>
                           )}
-                          <span>{t('subscription.tariff.perMonth')}</span>
+                          <span>{t('subscription.perMonth')}</span>
                         </span>
                       );
                     }
