@@ -246,14 +246,19 @@ export function TariffPickerGrid({
                       );
                     }
                     if (tariff.periods.length > 0) {
-                      const firstPeriod = tariff.periods[0];
-                      const promoPeriod = applyPromoDiscount(
-                        firstPeriod?.price_kopeks || 0,
-                        firstPeriod?.original_price_kopeks,
-                      );
+                      // Витрина сравнивает ТАРИФЫ, поэтому берём одну и ту же
+                      // величину у всех — цену за месяц. «От» показывало цену
+                      // кратчайшего периода, а на неделе большой тариф всегда
+                      // проигрывает, и «Семейный» выглядел дороже, хотя на
+                      // месяце он дешевле. Личные доплаты за устройства сюда
+                      // не тащим: у текущего тарифа они входят в price_kopeks,
+                      // и карточки переставали быть сравнимыми.
+                      const monthly =
+                        tariff.periods.find((p) => p.days === 30) ?? tariff.periods[0];
+                      const bare = monthly?.base_tariff_price_kopeks ?? monthly?.price_kopeks ?? 0;
+                      const promoPeriod = applyPromoDiscount(bare, undefined);
                       return (
                         <span className="flex flex-wrap items-center gap-2">
-                          <span>{t('subscription.from')}</span>
                           <span className="font-medium text-accent-400">
                             {formatPrice(promoPeriod.price)}
                           </span>
@@ -262,17 +267,7 @@ export function TariffPickerGrid({
                               {formatPrice(promoPeriod.original)}
                             </span>
                           )}
-                          {promoPeriod.percent && promoPeriod.percent > 0 && (
-                            <span
-                              className={`rounded px-1.5 py-0.5 text-xs ${
-                                promoPeriod.isPromoGroup
-                                  ? 'bg-success-500/20 text-success-400'
-                                  : 'bg-warning-500/20 text-warning-400'
-                              }`}
-                            >
-                              -{promoPeriod.percent}%
-                            </span>
-                          )}
+                          <span>{t('subscription.tariff.perMonth')}</span>
                         </span>
                       );
                     }
