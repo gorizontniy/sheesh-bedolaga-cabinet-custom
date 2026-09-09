@@ -413,7 +413,9 @@ export function TariffPurchaseForm({
                                   в зелёной строке: та должна остаться одним числом. */}
                               {monthlyPrice && monthlyPrice > displayPerMonth
                                 ? t('subscription.perMonthInsteadOf', {
-                                    price: `${formatPrice(displayPerMonth)}/${t('subscription.month')}`,
+                                    // Суффикс «/мес» живёт в самой строке локали,
+                                    // сюда идёт голая цена — иначе выходит «/мес/мес».
+                                    price: formatPrice(displayPerMonth),
                                     base: formatPrice(monthlyPrice),
                                   })
                                 : `${formatPrice(displayPerMonth)}/${t('subscription.month')}`}
