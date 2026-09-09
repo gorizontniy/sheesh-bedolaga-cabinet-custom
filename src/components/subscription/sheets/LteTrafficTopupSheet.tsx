@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { BestValueBadge } from '../BestValueBadge';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { subscriptionApi } from '../../../api/subscription';
 import { getErrorMessage } from '../../../utils/subscriptionHelpers';
@@ -121,24 +122,34 @@ export function LteTrafficTopupSheet({
       ) : (
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            {packages.map((pkg) => (
+            {packages.map((pkg, i) => {
+              // Цена за гигабайт в сетке строго убывает (5.80 -> 2.20), поэтому
+              // самый большой ДОСТУПНЫЙ пакет всегда и самый выгодный. Список
+              // режется потолком под тариф, значит вычислять нечего — метка
+              // всегда на последнем. Ставим только когда есть с чем сравнить.
+              const isBest = packages.length > 1 && i === packages.length - 1;
+              return (
               <button
                 key={pkg.gb}
                 onClick={() => onSelectedLteTrafficGbChange(pkg.gb)}
-                className={`rounded-xl border p-4 text-center transition-all ${
+                className={`relative rounded-xl border p-4 text-center transition-all ${
                   selectedLteTrafficGb === pkg.gb
                     ? 'border-accent-500 bg-accent-500/10'
-                    : isDark
-                      ? 'border-dark-700/50 bg-dark-800/50 hover:border-dark-600'
-                      : 'border-champagne-300/60 bg-champagne-200/40 hover:border-champagne-400'
+                    : isBest
+                      ? 'border-urgent-400'
+                      : isDark
+                        ? 'border-dark-700/50 bg-dark-800/50 hover:border-dark-600'
+                        : 'border-champagne-300/60 bg-champagne-200/40 hover:border-champagne-400'
                 }`}
               >
+                {isBest && <BestValueBadge className="absolute -top-2 left-1/2 -translate-x-1/2" />}
                 <div className="text-lg font-semibold text-dark-100">
                   {pkg.gb} {t('common.units.gb')}
                 </div>
                 <div className="font-medium text-accent-400">{formatPrice(pkg.price_kopeks)}</div>
               </button>
-            ))}
+              );
+            })}
           </div>
 
           {selectedLteTrafficGb !== null &&
