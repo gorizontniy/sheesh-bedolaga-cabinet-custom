@@ -635,7 +635,7 @@
       "buyLteTrafficShort": "Add LTE package",
       "buyLteTrafficTitle": "Add LTE package",
       "buyLteTrafficGb": "Add {{gb}} GB LTE",
-      "lteTrafficWarning": "Purchased LTE/WL packages are valid until the current subscription period ends and do not carry over",
+      "lteTrafficWarning": "The pack lasts until the end of the current subscription and does not carry over. Bypass traffic also draws on the main traffic package — 1.5 GB for every gigabyte.",
       "manageServers": "Squad management",
       "manageServersTitle": "Squad management",
       "connectedDevices": "Connected devices",
