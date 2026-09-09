@@ -667,7 +667,7 @@
       "buyLteTrafficShort": "Докупить LTE-пакет",
       "buyLteTrafficTitle": "Докупить LTE-пакет",
       "buyLteTrafficGb": "Докупить {{gb}} ГБ LTE",
-      "lteTrafficWarning": "Докупленный LTE/WL пакет действует до конца текущей подписки и не переносится на следующий период"
+      "lteTrafficWarning": "Докупленный LTE/WL пакет переносится между месячными сбросами и действует до конца подписки."
     },
     "serverManagement": {
       "statusLegend": "✅ — подключено • ➕ — будет добавлено (платно) • ➖ — будет отключено",
@@ -4853,7 +4853,7 @@
           "baseTraffic": "База",
           "purchasedTraffic": "Докуплено",
           "selectLtePackage": "Выберите LTE/WL пакет",
-          "lteTrafficNote": "LTE/WL пакеты действуют до конца текущей подписки.",
+          "lteTrafficNote": "LTE/WL пакет переносится между сбросами и действует до конца подписки.",
           "chargeUserBalance": "Списать с баланса пользователя",
           "sourceAdmin": "админ",
           "sourceUser": "пользователь",
