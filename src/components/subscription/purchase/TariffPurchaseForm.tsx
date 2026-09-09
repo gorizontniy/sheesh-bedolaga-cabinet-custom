@@ -409,7 +409,14 @@ export function TariffPurchaseForm({
                           </div>
                           {displayPerMonth !== null && (
                             <div className="mt-1 text-xs text-dark-500">
-                              {formatPrice(displayPerMonth)}/{t('subscription.month')}
+                              {/* База сравнения живёт здесь, рядом с ценой за месяц, а не
+                                  в зелёной строке: та должна остаться одним числом. */}
+                              {monthlyPrice && monthlyPrice > displayPerMonth
+                                ? t('subscription.perMonthInsteadOf', {
+                                    price: `${formatPrice(displayPerMonth)}/${t('subscription.month')}`,
+                                    base: formatPrice(monthlyPrice),
+                                  })
+                                : `${formatPrice(displayPerMonth)}/${t('subscription.month')}`}
                             </div>
                           )}
                           {savings !== null && (
@@ -417,13 +424,6 @@ export function TariffPurchaseForm({
                               {savingsPct !== null
                                 ? t('subscription.savingsVsMonthlyPct', {
                                     amount: formatPrice(savings),
-                                    percent: savingsPct,
-                                    // База экономии — помесячная оплата того же срока.
-                                    // Без неё на карточке стоят два числа от РАЗНЫХ баз
-                                    // (бейдж — скидка промогруппы, эта строка — выгода
-                                    // за срок) и читаются как противоречие.
-                                    months: Math.round(period.days / 30),
-                                    monthly: formatPrice(monthlyPrice ?? 0),
                                   })
                                 : t('subscription.savingsVsMonthly', {
                                     amount: formatPrice(savings),
