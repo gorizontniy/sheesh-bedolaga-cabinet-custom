@@ -193,9 +193,17 @@ export function TariffPickerGrid({
                   <div className="flex items-center gap-1.5">
                     <DevicesIcon className="h-4 w-4 text-dark-400" />
                     <span className="text-dark-300">
-                      {tariff.device_limit === 0
+                      {/* Карточка описывает ТАРИФ, поэтому показываем его
+                          включённый лимит, а не личный лимит подписчика: у
+                          текущего тарифа device_limit подменяется на
+                          эффективный (5 включённых + 5 докупленных = 10), и
+                          «Стандартный» вставал вровень с «Семейным» по
+                          устройствам, хотя включает вдвое меньше. */}
+                      {(tariff.base_device_limit ?? tariff.device_limit) === 0
                         ? '∞'
-                        : t('subscription.devices', { count: tariff.device_limit })}
+                        : t('subscription.devices', {
+                            count: tariff.base_device_limit ?? tariff.device_limit,
+                          })}
                     </span>
                   </div>
                   {tariff.traffic_reset_mode && tariff.traffic_reset_mode !== 'NO_RESET' && (
