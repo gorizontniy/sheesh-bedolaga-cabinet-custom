@@ -418,6 +418,12 @@ export function TariffPurchaseForm({
                                 ? t('subscription.savingsVsMonthlyPct', {
                                     amount: formatPrice(savings),
                                     percent: savingsPct,
+                                    // База экономии — помесячная оплата того же срока.
+                                    // Без неё на карточке стоят два числа от РАЗНЫХ баз
+                                    // (бейдж — скидка промогруппы, эта строка — выгода
+                                    // за срок) и читаются как противоречие.
+                                    months: Math.round(period.days / 30),
+                                    monthly: formatPrice(monthlyPrice ?? 0),
                                   })
                                 : t('subscription.savingsVsMonthly', {
                                     amount: formatPrice(savings),

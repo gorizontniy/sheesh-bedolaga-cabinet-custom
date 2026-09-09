@@ -384,7 +384,7 @@
     "daysBeforeExpiry_other": "到期前 {{count}} 天",
     "selectPeriod": "选择时长",
     "savingsVsMonthly": "您节省 {{amount}}",
-    "savingsVsMonthlyPct": "您节省 {{amount}}（{{percent}}%）",
+    "savingsVsMonthlyPct": "相比 {{months}} × {{monthly}}，您节省 {{amount}}（{{percent}}%）",
     "noPeriodsAvailable": "没有可用的续订周期",
     "noPeriodsAvailableHint": "管理员已更改此套餐的设置。请选择其他套餐续订您的订阅。",
     "chooseDifferentTariff": "选择其他套餐",
