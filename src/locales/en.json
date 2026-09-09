@@ -577,6 +577,8 @@
       "newTariff": "New tariff",
       "remainingDays": "Days remaining",
       "upgradeCost": "Upgrade cost",
+      "deltaTariff": "Tariff for the remaining days",
+      "deltaDevices": "Extra devices for the remaining days",
       "free": "Free",
       "switch": "Switch",
       "switched": "Tariff switched",

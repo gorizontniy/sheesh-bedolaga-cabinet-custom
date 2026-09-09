@@ -676,6 +676,9 @@ export const subscriptionApi = {
     base_upgrade_cost_kopeks?: number;
     discount_percent?: number;
     discount_kopeks?: number;
+    /** Разбор доплаты: сколько из неё дал сам тариф, а сколько доп. устройства. */
+    tariff_delta_kopeks?: number;
+    devices_delta_kopeks?: number;
   }> => {
     const response = await apiClient.post(
       '/cabinet/subscription/tariff/switch/preview',

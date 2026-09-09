@@ -183,6 +183,46 @@ export function SwitchTariffSheet({
                 </div>
               )}
 
+              {/* Разбор доплаты. Переход «вниз» может стоить денег: тариф дешевле,
+                  но включённых устройств в нём меньше, и докупленные дорожают.
+                  Голое число выглядит ошибкой — показываем, из чего оно сложилось. */}
+              {(switchPreview.tariff_delta_kopeks !== undefined ||
+                switchPreview.devices_delta_kopeks !== undefined) &&
+                (switchPreview.devices_delta_kopeks ?? 0) !== 0 && (
+                  <div className="space-y-1 rounded-lg bg-dark-800/40 p-3 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-dark-400">
+                        {t('subscription.switchTariff.deltaTariff')}
+                      </span>
+                      <span
+                        className={
+                          (switchPreview.tariff_delta_kopeks ?? 0) < 0
+                            ? 'text-success-400'
+                            : 'text-dark-200'
+                        }
+                      >
+                        {(switchPreview.tariff_delta_kopeks ?? 0) < 0 ? '−' : '+'}
+                        {formatPrice(Math.abs(switchPreview.tariff_delta_kopeks ?? 0))}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-dark-400">
+                        {t('subscription.switchTariff.deltaDevices')}
+                      </span>
+                      <span
+                        className={
+                          (switchPreview.devices_delta_kopeks ?? 0) < 0
+                            ? 'text-success-400'
+                            : 'text-dark-200'
+                        }
+                      >
+                        {(switchPreview.devices_delta_kopeks ?? 0) < 0 ? '−' : '+'}
+                        {formatPrice(Math.abs(switchPreview.devices_delta_kopeks ?? 0))}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
               <div className="flex items-center justify-between border-t border-dark-700/50 pt-3">
                 <div>
                   <span className="font-medium text-dark-100">

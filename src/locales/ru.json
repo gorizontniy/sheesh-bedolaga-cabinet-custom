@@ -591,6 +591,8 @@
       "newTariff": "Новый тариф",
       "remainingDays": "Осталось дней",
       "upgradeCost": "Доплата",
+      "deltaTariff": "Тариф за остаток срока",
+      "deltaDevices": "Доп. устройства за остаток срока",
       "free": "Бесплатно",
       "switch": "Перейти",
       "switched": "Тариф изменён",
