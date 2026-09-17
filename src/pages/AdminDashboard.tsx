@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { backTo } from '@/components/admin';
 import { useTranslation } from 'react-i18next';
+import { METHOD_LABELS } from '../constants/paymentMethods';
 import { useQuery } from '@tanstack/react-query';
 import { statsApi, type NodeStatus } from '../api/admin';
-import { formatUptime } from '../utils/format';
+import { formatUptime, parseCalendarDate } from '../utils/format';
 
 const CABINET_VERSION = __APP_VERSION__;
 import { useCurrency } from '../hooks/useCurrency';
@@ -72,8 +73,10 @@ function getNodeServiceBadges(node: NodeStatus): NodeServiceBadge[] {
     normalizedName.includes('cloudrix') ||
     normalizedName.includes('lte/wl') ||
     normalizedName.includes('mws');
-  const isLteBridge = normalizedName.includes('lte-primary') || normalizedAddress.includes('lte.sheesh.space');
-  const isSmartBridge = normalizedName.includes('smart-primary') || normalizedAddress.includes('smart2.sheesh.space');
+  const isLteBridge =
+    normalizedName.includes('lte-primary') || normalizedAddress.includes('lte.sheesh.space');
+  const isSmartBridge =
+    normalizedName.includes('smart-primary') || normalizedAddress.includes('smart2.sheesh.space');
 
   if (isRelayEntry) {
     return [
@@ -140,17 +143,19 @@ function NodeCard({ node, onRestart, onToggle, isLoading }: NodeCardProps) {
     <div
       className={`rounded-xl border bg-dark-800/50 ${node.is_disabled ? 'border-dark-700' : node.is_connected ? 'border-success-500/30' : 'border-error-500/30'} p-4 transition-colors hover:border-dark-600`}
     >
-      <div className="mb-3 flex items-start justify-between">
-        <div className="flex items-center gap-3">
+      <div className="mb-3 flex items-start justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-3">
           <div
-            className={`h-3 w-3 rounded-full ${node.is_disabled ? 'bg-dark-500' : node.is_connected ? 'animate-pulse bg-success-500' : 'bg-error-500'}`}
+            className={`h-3 w-3 shrink-0 rounded-full ${node.is_disabled ? 'bg-dark-500' : node.is_connected ? 'animate-pulse bg-success-500' : 'bg-error-500'}`}
           />
-          <div>
-            <div className="font-medium text-dark-100">{node.name}</div>
-            <div className="text-xs text-dark-500">{node.address}</div>
+          <div className="min-w-0">
+            <div className="font-medium text-dark-100 [overflow-wrap:anywhere]">{node.name}</div>
+            <div className="text-xs text-dark-500 break-all">{node.address}</div>
           </div>
         </div>
-        <span className={`rounded-full px-2 py-1 text-xs ${getStatusColor()}`}>
+        <span
+          className={`shrink-0 whitespace-nowrap rounded-full px-2 py-1 text-xs ${getStatusColor()}`}
+        >
           {getStatusText()}
         </span>
       </div>
@@ -251,7 +256,7 @@ function RevenueChart({ data }: { data: { date: string; amount_rubles: number }[
     <div className="space-y-3">
       {last7Days.map((item) => {
         const percentage = (item.amount_rubles / maxValue) * 100;
-        const date = new Date(item.date);
+        const date = parseCalendarDate(item.date);
         const dayName = date.toLocaleDateString('ru-RU', { weekday: 'short' });
         const dayNum = date.getDate();
 
@@ -262,7 +267,9 @@ function RevenueChart({ data }: { data: { date: string; amount_rubles: number }[
                 {dayName}, {dayNum}
               </span>
               <span className="text-sm font-semibold text-dark-100">
-                {formatAmount(item.amount_rubles)} {currencySymbol}
+                {formatAmount(item.amount_rubles)}
+                {'\u00A0'}
+                {currencySymbol}
               </span>
             </div>
             <div className="h-3 overflow-hidden rounded-full bg-dark-700/50">
@@ -371,13 +378,13 @@ export default function AdminDashboard() {
   return (
     <div className="animate-fade-in space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex min-w-0 flex-1 basis-48 items-center gap-3">
           {/* Show back button only on web, not in Telegram Mini App */}
           {!capabilities.hasBackButton && (
             <button
               onClick={() => navigate('/admin')}
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-dark-700 bg-dark-800 transition-colors hover:border-dark-600"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-dark-700 bg-dark-800 transition-colors hover:border-dark-600"
             >
               <BackIcon />
             </button>
@@ -414,13 +421,13 @@ export default function AdminDashboard() {
         />
         <StatCard
           label={t('adminDashboard.stats.incomeToday')}
-          value={`${formatAmount(stats?.financial.income_today_rubles || 0)} ${currencySymbol}`}
+          value={`${formatAmount(stats?.financial.income_today_rubles || 0)}\u00A0${currencySymbol}`}
           icon={<WalletIcon className="h-5 w-5" />}
           tone="warning"
         />
         <StatCard
           label={t('adminDashboard.stats.incomeMonth')}
-          value={`${formatAmount(stats?.financial.income_month_rubles || 0)} ${currencySymbol}`}
+          value={`${formatAmount(stats?.financial.income_month_rubles || 0)}\u00A0${currencySymbol}`}
           icon={<ChartBarIcon className="h-5 w-5" />}
           tone="accent"
         />
@@ -512,13 +519,13 @@ export default function AdminDashboard() {
           <div className="mt-4 grid grid-cols-2 gap-4 border-t border-dark-700 pt-4">
             <StatCard
               label={t('adminDashboard.stats.incomeTotal')}
-              value={`${formatAmount(stats?.financial.income_total_rubles || 0)} ${currencySymbol}`}
+              value={`${formatAmount(stats?.financial.income_total_rubles || 0)}\u00A0${currencySymbol}`}
               icon={<BanknotesIcon className="h-5 w-5" />}
               tone="neutral"
             />
             <StatCard
               label={t('adminDashboard.stats.subscriptionIncome')}
-              value={`${formatAmount(stats?.financial.subscription_income_rubles || 0)} ${currencySymbol}`}
+              value={`${formatAmount(stats?.financial.subscription_income_rubles || 0)}\u00A0${currencySymbol}`}
               icon={<SparklesIcon className="h-5 w-5" />}
               tone="accent"
             />
@@ -571,7 +578,7 @@ export default function AdminDashboard() {
               <div className="mb-3 text-sm font-medium text-dark-300">
                 {t('adminDashboard.subscriptions.newSubscriptions')}
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 max-sm:[&>*:last-child:nth-child(odd)]:col-span-2">
                 <StatCard
                   label={t('adminDashboard.subscriptions.today')}
                   value={stats?.subscriptions.purchased_today || 0}
@@ -757,7 +764,9 @@ export default function AdminDashboard() {
                       {referrersTab === 'earnings' ? (
                         <>
                           <div className="text-xs font-semibold text-success-400 sm:text-sm">
-                            {formatAmount(ref.earnings_total_kopeks / 100)} {currencySymbol}
+                            {formatAmount(ref.earnings_total_kopeks / 100)}
+                            {'\u00A0'}
+                            {currencySymbol}
                           </div>
                           <div className="text-[10px] text-dark-500 sm:text-xs">
                             {ref.invited_count} {t('adminDashboard.topReferrers.invites')}
@@ -769,7 +778,9 @@ export default function AdminDashboard() {
                             {ref.invited_count} {t('adminDashboard.topReferrers.people')}
                           </div>
                           <div className="text-[10px] text-dark-500 sm:text-xs">
-                            {formatAmount(ref.earnings_total_kopeks / 100)} {currencySymbol}
+                            {formatAmount(ref.earnings_total_kopeks / 100)}
+                            {'\u00A0'}
+                            {currencySymbol}
                           </div>
                         </>
                       )}
@@ -779,7 +790,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Period Stats */}
-            <div className="mt-4 grid grid-cols-3 gap-2 border-t border-dark-700 pt-4 sm:gap-3">
+            <div className="mt-4 grid grid-cols-2 gap-2 border-t border-dark-700 pt-4 sm:grid-cols-3 sm:gap-3 max-sm:[&>*:last-child:nth-child(odd)]:col-span-2">
               <StatCard
                 label={t('adminDashboard.period.today')}
                 value={`${formatAmount(
@@ -787,7 +798,7 @@ export default function AdminDashboard() {
                     ? referrers.by_earnings
                     : referrers.by_invited
                   ).reduce((sum, r) => sum + r.earnings_today_kopeks, 0) / 100,
-                )} ${currencySymbol}`}
+                )}\u00A0${currencySymbol}`}
                 icon={<ClockIcon className="h-5 w-5" />}
                 tone="neutral"
               />
@@ -798,7 +809,7 @@ export default function AdminDashboard() {
                     ? referrers.by_earnings
                     : referrers.by_invited
                   ).reduce((sum, r) => sum + r.earnings_week_kopeks, 0) / 100,
-                )} ${currencySymbol}`}
+                )}\u00A0${currencySymbol}`}
                 icon={<CalendarBlankIcon className="h-5 w-5" />}
                 tone="neutral"
               />
@@ -809,7 +820,7 @@ export default function AdminDashboard() {
                     ? referrers.by_earnings
                     : referrers.by_invited
                   ).reduce((sum, r) => sum + r.earnings_month_kopeks, 0) / 100,
-                )} ${currencySymbol}`}
+                )}\u00A0${currencySymbol}`}
                 icon={<CalendarIcon className="h-5 w-5" />}
                 tone="neutral"
               />
@@ -856,7 +867,9 @@ export default function AdminDashboard() {
                   </div>
                   <div className="flex-shrink-0 text-right">
                     <div className="text-xs font-semibold text-warning-400 sm:text-sm">
-                      {formatAmount(campaign.total_revenue_kopeks / 100)} {currencySymbol}
+                      {formatAmount(campaign.total_revenue_kopeks / 100)}
+                      {'\u00A0'}
+                      {currencySymbol}
                     </div>
                     <div className="text-[10px] text-dark-500 sm:text-xs">
                       {campaign.registrations} · {campaign.conversion_rate.toFixed(0)}%
@@ -872,7 +885,9 @@ export default function AdminDashboard() {
                   {t('adminDashboard.topCampaigns.total')}
                 </span>
                 <span className="text-sm font-bold text-warning-400 sm:text-base">
-                  {formatAmount(campaigns.total_revenue_kopeks / 100)} {currencySymbol}
+                  {formatAmount(campaigns.total_revenue_kopeks / 100)}
+                  {'\u00A0'}
+                  {currencySymbol}
                 </span>
               </div>
             </div>
@@ -894,13 +909,13 @@ export default function AdminDashboard() {
                 </h2>
                 <p className="text-xs text-dark-400 sm:text-sm">
                   {t('adminDashboard.recentPayments.today', {
-                    amount: `${formatAmount(payments.total_today_kopeks / 100)} ${currencySymbol}`,
+                    amount: `${formatAmount(payments.total_today_kopeks / 100)}\u00A0${currencySymbol}`,
                   })}
                   <span className="hidden sm:inline">
                     {' '}
                     ·{' '}
                     {t('adminDashboard.recentPayments.week', {
-                      amount: `${formatAmount(payments.total_week_kopeks / 100)} ${currencySymbol}`,
+                      amount: `${formatAmount(payments.total_week_kopeks / 100)}\u00A0${currencySymbol}`,
                     })}
                   </span>
                 </p>
@@ -964,11 +979,17 @@ export default function AdminDashboard() {
                     </td>
                     <td className="px-2 py-3 text-right">
                       <span className="font-semibold text-dark-100">
-                        {formatAmount(payment.amount_rubles)} {currencySymbol}
+                        {formatAmount(payment.amount_rubles)}
+                        {'\u00A0'}
+                        {currencySymbol}
                       </span>
                     </td>
                     <td className="px-2 py-3">
-                      <span className="text-xs text-dark-400">{payment.payment_method || '-'}</span>
+                      <span className="text-xs text-dark-400">
+                        {payment.payment_method
+                          ? (METHOD_LABELS[payment.payment_method] ?? payment.payment_method)
+                          : '-'}
+                      </span>
                     </td>
                     <td className="px-2 py-3 text-right">
                       <span className="text-xs text-dark-400">
@@ -992,15 +1013,6 @@ export default function AdminDashboard() {
               <div key={payment.id} className="rounded-lg bg-dark-900/50 p-3">
                 <div className="mb-2 flex items-center justify-between">
                   <div className="flex min-w-0 flex-1 items-center gap-2">
-                    <span
-                      className={`whitespace-nowrap rounded-full px-1.5 py-0.5 text-[10px] ${
-                        payment.type === 'deposit'
-                          ? 'bg-success-500/20 text-success-400'
-                          : 'bg-accent-500/20 text-accent-400'
-                      }`}
-                    >
-                      {payment.type_display}
-                    </span>
                     <button
                       onClick={() => navigate(`/admin/users/${payment.user_id}`, backTo(location))}
                       className="truncate text-sm font-medium text-dark-100 underline decoration-dark-600 underline-offset-2 transition-colors hover:decoration-dark-400"
@@ -1009,11 +1021,28 @@ export default function AdminDashboard() {
                     </button>
                   </div>
                   <span className="ml-2 whitespace-nowrap text-sm font-semibold text-dark-100">
-                    {formatAmount(payment.amount_rubles)} {currencySymbol}
+                    {formatAmount(payment.amount_rubles)}
+                    {'\u00A0'}
+                    {currencySymbol}
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-xs text-dark-500">
-                  <span>{payment.payment_method || '-'}</span>
+                <div className="flex items-center justify-between gap-2 text-xs text-dark-500">
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span
+                      className={`shrink-0 whitespace-nowrap rounded-full px-1.5 py-0.5 text-[10px] ${
+                        payment.type === 'deposit'
+                          ? 'bg-success-500/20 text-success-400'
+                          : 'bg-accent-500/20 text-accent-400'
+                      }`}
+                    >
+                      {payment.type_display}
+                    </span>
+                    <span className="truncate">
+                      {payment.payment_method
+                        ? (METHOD_LABELS[payment.payment_method] ?? payment.payment_method)
+                        : '-'}
+                    </span>
+                  </span>
                   <span>
                     {new Date(payment.created_at).toLocaleString('ru-RU', {
                       day: '2-digit',

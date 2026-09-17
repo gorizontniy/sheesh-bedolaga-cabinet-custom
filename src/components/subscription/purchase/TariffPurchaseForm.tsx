@@ -14,9 +14,10 @@ import {
   getSavingsPercent,
   getSavingsVsMonthlyKopeks,
 } from '../../../utils/pricing';
+import { pickBestValue } from '../../../utils/bestValue';
 import InsufficientBalancePrompt from '../../InsufficientBalancePrompt';
 import type { Tariff, TariffPeriod } from '../../../types';
-import { BestValueBadge } from '../BestValueBadge';
+import { BestValueBadge, bestValueFrame } from '../BestValueBadge';
 
 // ──────────────────────────────────────────────────────────────────
 // TariffPurchaseForm
@@ -68,12 +69,14 @@ export function TariffPurchaseForm({
   const formatPrice = (kopeks: number) =>
     kopeks === 0
       ? t('subscription.free', 'Бесплатно')
-      : `${formatAmount(kopeks / 100)} ${currencySymbol}`;
+      : `${formatAmount(kopeks / 100)}\u00A0${currencySymbol}`;
 
   // Form-internal state — seeded from the tariff prop. Resets via
   // `key={tariff.id}` on the parent's render.
+  // Отмеченный оператором период выбран сразу: рамка «Выгодно» и итог внизу
+  // должны говорить об одном и том же периоде.
   const [selectedTariffPeriod, setSelectedTariffPeriod] = useState<TariffPeriod | null>(
-    tariff.periods[0] || null,
+    pickBestValue(tariff.periods) || tariff.periods[0] || null,
   );
   const [customDays, setCustomDays] = useState<number>(30);
   const [customTrafficGb, setCustomTrafficGb] = useState<number>(50);
@@ -250,7 +253,7 @@ export function TariffPurchaseForm({
                 <span className="text-dark-500 line-through">
                   {formatPrice(dailyQuote.original)}
                 </span>
-                {dailyQuote.percent && dailyQuote.percent > 0 && (
+                {dailyQuote.percent != null && dailyQuote.percent > 0 && (
                   <span
                     className={`rounded px-1.5 py-0.5 text-xs ${
                       dailyQuote.isPromoGroup
@@ -344,9 +347,8 @@ export function TariffPurchaseForm({
             {tariff.periods.length > 0 &&
               !useCustomDays &&
               (() => {
-                // Базой для «вы экономите» служит собственный месячный период
-                // тарифа. Считаем по той же цене, что видит покупатель (с промо),
-                // иначе экономия разъедется с ценами на соседних карточках.
+                // Базой для «вы экономите» служит собственный месячный период тарифа,
+                // посчитанный по той же цене, что видит покупатель.
                 const monthlyPeriod = tariff.periods.find((p) => p.days === 30);
                 const monthlyPrice = monthlyPeriod
                   ? applyPromoDiscount(
@@ -371,6 +373,8 @@ export function TariffPurchaseForm({
                         monthlyPrice,
                       );
                       const savingsPct = getSavingsPercent(displayPrice, savings);
+                      const isSelectedPeriod =
+                        selectedTariffPeriod?.days === period.days && !useCustomDays;
 
                       return (
                         <button
@@ -380,14 +384,17 @@ export function TariffPurchaseForm({
                             setUseCustomDays(false);
                           }}
                           className={`relative rounded-xl p-4 text-left transition-all ${
-                            selectedTariffPeriod?.days === period.days && !useCustomDays
-                              ? 'border border-accent-500 bg-accent-500/10'
-                              : period.is_highlighted
-                                ? 'border-2 border-urgent-400 bg-dark-800/50'
+                            period.is_highlighted
+                              ? `${bestValueFrame(isSelectedPeriod)} ${isSelectedPeriod ? 'bg-accent-500/10' : 'bg-dark-800/50'}`
+                              : isSelectedPeriod
+                                ? 'border border-accent-500 bg-accent-500/10'
                                 : 'border border-dark-700/50 bg-dark-800/50 hover:border-dark-600'
                           }`}
                         >
-                          {displayDiscount && displayDiscount > 0 && (
+                          {/* Плашка первой строкой, как в продлении; скидка — в правом
+                          верхнем углу поверх рамки, они не пересекаются. */}
+                          {period.is_highlighted && <BestValueBadge className="mb-2" />}
+                          {displayDiscount != null && displayDiscount > 0 && (
                             <div
                               className={`absolute -right-2 -top-2 rounded-full px-2 py-0.5 text-xs font-medium text-white ${
                                 promoPeriod.isPromoGroup ? 'bg-success-500' : 'bg-warning-500'
@@ -397,24 +404,25 @@ export function TariffPurchaseForm({
                             </div>
                           )}
                           <div className="text-lg font-semibold text-dark-100">{period.label}</div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-accent-400">
+                          {/* Цена не рвётся между числом и знаком валюты: две цены в
+                          карточку шириной в полэкрана не влезают, и без переноса
+                          целиком «₽» уезжал на свою строку. */}
+                          <div className="flex flex-wrap items-center gap-x-2">
+                            <span className="whitespace-nowrap font-medium text-accent-400">
                               {formatPrice(displayPrice)}
                             </span>
                             {displayOriginal && displayOriginal > displayPrice && (
-                              <span className="text-sm text-dark-500 line-through">
+                              <span className="whitespace-nowrap text-sm text-dark-500 line-through">
                                 {formatPrice(displayOriginal)}
                               </span>
                             )}
                           </div>
                           {displayPerMonth !== null && (
                             <div className="mt-1 text-xs text-dark-500">
-                              {/* База сравнения живёт здесь, рядом с ценой за месяц, а не
-                                  в зелёной строке: та должна остаться одним числом. */}
+                              {/* База сравнения стоит рядом с ценой за месяц: зелёная строка
+                              ниже должна остаться одним числом. */}
                               {monthlyPrice && monthlyPrice > displayPerMonth
                                 ? t('subscription.perMonthInsteadOf', {
-                                    // Суффикс «/мес» живёт в самой строке локали,
-                                    // сюда идёт голая цена — иначе выходит «/мес/мес».
                                     price: formatPrice(displayPerMonth),
                                     base: formatPrice(monthlyPrice),
                                   })
@@ -432,8 +440,6 @@ export function TariffPurchaseForm({
                                   })}
                             </div>
                           )}
-                          {/* Под ценой, а не в углу: правый верхний угол занят скидкой. */}
-                          {period.is_highlighted && <BestValueBadge className="mt-2" />}
                         </button>
                       );
                     })}
@@ -491,7 +497,7 @@ export function TariffPurchaseForm({
                         max={tariff.max_days ?? 365}
                         value={customDays}
                         onChange={(e) => setCustomDays(parseInt(e.target.value))}
-                        className="flex-1 accent-accent-500"
+                        className="min-w-0 flex-1 accent-accent-500"
                       />
                       <input
                         type="number"
@@ -521,13 +527,16 @@ export function TariffPurchaseForm({
                           : undefined;
                       const promoCustom = applyPromoDiscount(basePrice, existingOriginal);
                       return (
-                        <div className="flex justify-between text-sm">
+                        <div className="flex flex-wrap justify-between gap-x-3 text-sm">
+                          {/* «/день» — уже в переводе; второй «/» давал «₽//день». */}
                           <span className="text-dark-400">
                             {t('subscription.days', { count: customDays })} ×{' '}
-                            {formatPrice(tariff.price_per_day_kopeks ?? 0)}/
-                            {t('subscription.customDays.perDay')}
+                            <span className="whitespace-nowrap">
+                              {formatPrice(tariff.price_per_day_kopeks ?? 0)}
+                              {t('subscription.customDays.perDay')}
+                            </span>
                           </span>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 whitespace-nowrap">
                             <span className="font-medium text-accent-400">
                               {formatPrice(promoCustom.price)}
                             </span>
@@ -594,16 +603,18 @@ export function TariffPurchaseForm({
                 )}
                 {useCustomTraffic && (
                   <div className="space-y-3">
-                    <div className="flex items-center gap-4">
+                    {/* Ползунок сжимается, поле с «ГБ» — нет: на 360 «ГБ» упиралось
+                        в рамку карточки. */}
+                    <div className="flex items-center gap-3">
                       <input
                         type="range"
                         min={tariff.min_traffic_gb ?? 1}
                         max={tariff.max_traffic_gb ?? 1000}
                         value={customTrafficGb}
                         onChange={(e) => setCustomTrafficGb(parseInt(e.target.value))}
-                        className="flex-1 accent-accent-500"
+                        className="min-w-0 flex-1 accent-accent-500"
                       />
-                      <div className="flex items-center gap-2">
+                      <div className="flex shrink-0 items-center gap-2">
                         <input
                           type="number"
                           value={customTrafficGb}
@@ -625,13 +636,15 @@ export function TariffPurchaseForm({
                         <span className="text-dark-400">{t('common.units.gb')}</span>
                       </div>
                     </div>
-                    <div className="flex justify-between text-sm">
+                    <div className="flex flex-wrap justify-between gap-x-3 text-sm">
                       <span className="text-dark-400">
                         {customTrafficGb} {t('common.units.gb')} ×{' '}
-                        {formatPrice(tariff.traffic_price_per_gb_kopeks ?? 0)}/
-                        {t('common.units.gb')}
+                        <span className="whitespace-nowrap">
+                          {formatPrice(tariff.traffic_price_per_gb_kopeks ?? 0)}/
+                          {t('common.units.gb')}
+                        </span>
                       </span>
-                      <span className="font-medium text-accent-400">
+                      <span className="whitespace-nowrap font-medium text-accent-400">
                         +{formatPrice(customTrafficGb * (tariff.traffic_price_per_gb_kopeks ?? 0))}
                       </span>
                     </div>
@@ -673,12 +686,12 @@ export function TariffPurchaseForm({
                   <>
                     <div className="mb-4 space-y-2">
                       {useCustomDays ? (
-                        <div className="flex justify-between text-sm text-dark-300">
+                        <div className="flex flex-wrap justify-between gap-x-3 text-sm text-dark-300">
                           <span>
                             {t('subscription.stepPeriod')}:{' '}
                             {t('subscription.days', { count: customDays })}
                           </span>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 whitespace-nowrap">
                             <span>{formatPrice(promoPeriod.price)}</span>
                             {promoPeriod.original && promoPeriod.original > promoPeriod.price && (
                               <span className="text-xs text-dark-500 line-through">
@@ -693,7 +706,7 @@ export function TariffPurchaseForm({
                             {(selectedTariffPeriod.extra_devices_count ?? 0) > 0 &&
                             selectedTariffPeriod.base_tariff_price_kopeks ? (
                               <>
-                                <div className="flex justify-between text-sm text-dark-300">
+                                <div className="flex flex-wrap justify-between gap-x-3 text-sm text-dark-300">
                                   <span>
                                     {t('subscription.baseTariff')}: {selectedTariffPeriod.label}
                                   </span>
@@ -701,7 +714,7 @@ export function TariffPurchaseForm({
                                     {formatPrice(selectedTariffPeriod.base_tariff_price_kopeks)}
                                   </span>
                                 </div>
-                                <div className="flex justify-between text-sm text-dark-300">
+                                <div className="flex flex-wrap justify-between gap-x-3 text-sm text-dark-300">
                                   <span>
                                     {t('subscription.extraDevices')} (
                                     {selectedTariffPeriod.extra_devices_count})
@@ -715,13 +728,13 @@ export function TariffPurchaseForm({
                                 </div>
                               </>
                             ) : (
-                              <div className="flex justify-between text-sm text-dark-300">
+                              <div className="flex flex-wrap justify-between gap-x-3 text-sm text-dark-300">
                                 <span>
                                   {t('subscription.summary.period', {
                                     label: selectedTariffPeriod.label,
                                   })}
                                 </span>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 whitespace-nowrap">
                                   <span>{formatPrice(promoPeriod.price)}</span>
                                   {promoPeriod.original &&
                                     promoPeriod.original > promoPeriod.price && (
@@ -736,7 +749,7 @@ export function TariffPurchaseForm({
                         )
                       )}
                       {useCustomTraffic && tariff.custom_traffic_enabled && (
-                        <div className="flex justify-between text-sm text-dark-300">
+                        <div className="flex flex-wrap justify-between gap-x-3 text-sm text-dark-300">
                           <span>{t('subscription.summary.traffic', { gb: customTrafficGb })}</span>
                           <span>+{formatPrice(trafficPrice)}</span>
                         </div>
@@ -751,10 +764,10 @@ export function TariffPurchaseForm({
                       </div>
                     )}
 
-                    <div className="mb-4 flex items-center justify-between border-t border-dark-700/50 pt-2">
+                    <div className="mb-4 flex items-center justify-between gap-3 border-t border-dark-700/50 pt-2">
                       <span className="font-medium text-dark-100">{t('subscription.total')}</span>
                       <div className="text-right">
-                        <span className="text-2xl font-bold text-accent-400">
+                        <span className="whitespace-nowrap text-2xl font-bold text-accent-400">
                           {formatPrice(totalPrice)}
                         </span>
                         {originalTotal && (

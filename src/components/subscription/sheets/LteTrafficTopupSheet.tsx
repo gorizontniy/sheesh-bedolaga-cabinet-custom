@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { BestValueBadge } from '../BestValueBadge';
+import { BestValueBadge, bestValueFrame } from '../BestValueBadge';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { subscriptionApi } from '../../../api/subscription';
 import { getErrorMessage } from '../../../utils/subscriptionHelpers';
@@ -44,7 +44,7 @@ export function LteTrafficTopupSheet({
 
   const formatPrice = (kopeks: number) => {
     const rubles = kopeks / 100;
-    return rubles % 1 === 0 ? `${rubles} ₽` : `${rubles.toFixed(2)} ₽`;
+    return rubles % 1 === 0 ? `${rubles} ₽` : `${rubles.toFixed(2)} ₽`;
   };
 
   const { data: lteTrafficPackage } = useQuery({
@@ -129,25 +129,29 @@ export function LteTrafficTopupSheet({
               // всегда на последнем. Ставим только когда есть с чем сравнить.
               const isBest = packages.length > 1 && i === packages.length - 1;
               return (
-              <button
-                key={pkg.gb}
-                onClick={() => onSelectedLteTrafficGbChange(pkg.gb)}
-                className={`relative rounded-xl border p-4 text-center transition-all ${
-                  selectedLteTrafficGb === pkg.gb
-                    ? 'border-accent-500 bg-accent-500/10'
-                    : isBest
-                      ? 'border-urgent-400'
-                      : isDark
-                        ? 'border-dark-700/50 bg-dark-800/50 hover:border-dark-600'
-                        : 'border-champagne-300/60 bg-champagne-200/40 hover:border-champagne-400'
-                }`}
-              >
-                {isBest && <BestValueBadge className="absolute -top-2 left-1/2 -translate-x-1/2" />}
-                <div className="text-lg font-semibold text-dark-100">
-                  {pkg.gb} {t('common.units.gb')}
-                </div>
-                <div className="font-medium text-accent-400">{formatPrice(pkg.price_kopeks)}</div>
-              </button>
+                <button
+                  key={pkg.gb}
+                  onClick={() => onSelectedLteTrafficGbChange(pkg.gb)}
+                  className={`relative rounded-xl p-4 text-center transition-all ${
+                    isBest
+                      ? `${bestValueFrame(selectedLteTrafficGb === pkg.gb)} ${
+                          selectedLteTrafficGb === pkg.gb ? 'bg-accent-500/10' : ''
+                        }`
+                      : selectedLteTrafficGb === pkg.gb
+                        ? 'border border-accent-500 bg-accent-500/10'
+                        : isDark
+                          ? 'border border-dark-700/50 bg-dark-800/50 hover:border-dark-600'
+                          : 'border border-champagne-300/60 bg-champagne-200/40 hover:border-champagne-400'
+                  }`}
+                >
+                  {isBest && (
+                    <BestValueBadge className="absolute -top-2 left-1/2 -translate-x-1/2" />
+                  )}
+                  <div className="text-lg font-semibold text-dark-100">
+                    {pkg.gb} {t('common.units.gb')}
+                  </div>
+                  <div className="font-medium text-accent-400">{formatPrice(pkg.price_kopeks)}</div>
+                </button>
               );
             })}
           </div>
@@ -172,7 +176,10 @@ export function LteTrafficTopupSheet({
                       compact
                       className="mb-3"
                       onBeforeTopUp={async () => {
-                        await subscriptionApi.saveLteTrafficCart(selectedLteTrafficGb, subscriptionId);
+                        await subscriptionApi.saveLteTrafficCart(
+                          selectedLteTrafficGb,
+                          subscriptionId,
+                        );
                       }}
                     />
                   )}
