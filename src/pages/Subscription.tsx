@@ -18,6 +18,7 @@ import InsufficientBalancePrompt from '../components/InsufficientBalancePrompt';
 import { useCurrency } from '../hooks/useCurrency';
 import { useCloseOnSuccessNotification } from '../store/successNotification';
 import PurchaseCTAButton from '../components/subscription/PurchaseCTAButton';
+import { planTitle, showsAddonOptions, showsAutopayToggle } from '../utils/legacySubscription';
 import {
   ArrowPathIcon,
   CalendarIcon,
@@ -848,7 +849,7 @@ export default function Subscription() {
 
                   {/* Plan name */}
                   <h2 className="text-lg font-bold tracking-tight text-dark-50">
-                    {subscription.tariff_name || t('subscription.currentPlan')}
+                    {planTitle(subscription, t)}
                   </h2>
                 </div>
 
@@ -1390,7 +1391,7 @@ export default function Subscription() {
               )}
 
               {/* ─── Autopay Toggle ─── */}
-              {!subscription.is_trial && !subscription.is_daily && (
+              {showsAutopayToggle(subscription) && (
                 <div
                   className="flex items-center justify-between rounded-[14px] p-3.5"
                   style={{
@@ -1889,103 +1890,100 @@ export default function Subscription() {
         )}
 
       {/* Additional Options (Buy Devices) */}
-      {subscription &&
-        (subscription.is_active || subscription.is_limited) &&
-        !subscription.is_trial &&
-        subscription.device_limit !== 0 && (
-          <div
-            className="relative overflow-hidden rounded-3xl"
-            style={{
-              background: g.cardBg,
-              border: `1px solid ${g.cardBorder}`,
-              boxShadow: g.shadow,
-              padding: '24px 28px',
-            }}
-          >
-            <h2 className="mb-4 text-base font-bold tracking-tight text-dark-50">
-              {t('subscription.additionalOptions.title')}
-            </h2>
+      {subscription && showsAddonOptions(subscription) && (
+        <div
+          className="relative overflow-hidden rounded-3xl"
+          style={{
+            background: g.cardBg,
+            border: `1px solid ${g.cardBorder}`,
+            boxShadow: g.shadow,
+            padding: '24px 28px',
+          }}
+        >
+          <h2 className="mb-4 text-base font-bold tracking-tight text-dark-50">
+            {t('subscription.additionalOptions.title')}
+          </h2>
 
-            {/* Buy Devices */}
-            <DeviceTopupSheet
-              open={showDeviceTopup}
-              onOpen={() => setShowDeviceTopup(true)}
-              onClose={() => setShowDeviceTopup(false)}
-              subscription={subscription}
+          {/* Buy Devices */}
+          <DeviceTopupSheet
+            open={showDeviceTopup}
+            onOpen={() => setShowDeviceTopup(true)}
+            onClose={() => setShowDeviceTopup(false)}
+            subscription={subscription}
+            subscriptionId={subscriptionId}
+            devicesToAdd={devicesToAdd}
+            onDevicesToAddChange={setDevicesToAdd}
+            purchaseOptions={purchaseOptions}
+            isDark={isDark}
+          />
+
+          {/* Reduce Devices */}
+          <div className="mt-4">
+            <DeviceReductionSheet
+              open={showDeviceReduction}
+              onOpen={() => setShowDeviceReduction(true)}
+              onClose={() => setShowDeviceReduction(false)}
+              subscriptionPresent={!!subscription}
               subscriptionId={subscriptionId}
-              devicesToAdd={devicesToAdd}
-              onDevicesToAddChange={setDevicesToAdd}
-              purchaseOptions={purchaseOptions}
+              targetDeviceLimit={targetDeviceLimit}
+              onTargetDeviceLimitChange={setTargetDeviceLimit}
               isDark={isDark}
             />
+          </div>
 
-            {/* Reduce Devices */}
+          {/* Buy Traffic */}
+          {subscription.traffic_limit_gb > 0 && (
             <div className="mt-4">
-              <DeviceReductionSheet
-                open={showDeviceReduction}
-                onOpen={() => setShowDeviceReduction(true)}
-                onClose={() => setShowDeviceReduction(false)}
-                subscriptionPresent={!!subscription}
+              <TrafficTopupSheet
+                open={showTrafficTopup}
+                onOpen={() => setShowTrafficTopup(true)}
+                onClose={() => setShowTrafficTopup(false)}
+                subscription={subscription}
                 subscriptionId={subscriptionId}
-                targetDeviceLimit={targetDeviceLimit}
-                onTargetDeviceLimitChange={setTargetDeviceLimit}
+                selectedTrafficPackage={selectedTrafficPackage}
+                onSelectedTrafficPackageChange={setSelectedTrafficPackage}
+                purchaseOptions={purchaseOptions}
                 isDark={isDark}
               />
             </div>
+          )}
 
-            {/* Buy Traffic */}
-            {subscription.traffic_limit_gb > 0 && (
-              <div className="mt-4">
-                <TrafficTopupSheet
-                  open={showTrafficTopup}
-                  onOpen={() => setShowTrafficTopup(true)}
-                  onClose={() => setShowTrafficTopup(false)}
-                  subscription={subscription}
-                  subscriptionId={subscriptionId}
-                  selectedTrafficPackage={selectedTrafficPackage}
-                  onSelectedTrafficPackageChange={setSelectedTrafficPackage}
-                  purchaseOptions={purchaseOptions}
-                  isDark={isDark}
-                />
-              </div>
-            )}
+          {/* Buy LTE/WL Traffic (Sheesh) */}
+          {subscription.lte_traffic && (
+            <div className="mt-4">
+              <LteTrafficTopupSheet
+                open={showLteTrafficTopup}
+                onOpen={() => setShowLteTrafficTopup(true)}
+                onClose={() => setShowLteTrafficTopup(false)}
+                subscription={subscription}
+                subscriptionId={subscriptionId}
+                currentLteTraffic={subscription.lte_traffic}
+                selectedLteTrafficGb={selectedLteTrafficGb}
+                onSelectedLteTrafficGbChange={setSelectedLteTrafficGb}
+                purchaseOptions={purchaseOptions}
+                isDark={isDark}
+              />
+            </div>
+          )}
 
-            {/* Buy LTE/WL Traffic (Sheesh) */}
-            {subscription.lte_traffic && (
-              <div className="mt-4">
-                <LteTrafficTopupSheet
-                  open={showLteTrafficTopup}
-                  onOpen={() => setShowLteTrafficTopup(true)}
-                  onClose={() => setShowLteTrafficTopup(false)}
-                  subscription={subscription}
-                  subscriptionId={subscriptionId}
-                  currentLteTraffic={subscription.lte_traffic}
-                  selectedLteTrafficGb={selectedLteTrafficGb}
-                  onSelectedLteTrafficGbChange={setSelectedLteTrafficGb}
-                  purchaseOptions={purchaseOptions}
-                  isDark={isDark}
-                />
-              </div>
-            )}
-
-            {/* Server Management - only in classic mode */}
-            {!isTariffsMode && (
-              <div className="mt-4">
-                <ServerManagementSheet
-                  open={showServerManagement}
-                  onOpen={() => setShowServerManagement(true)}
-                  onClose={() => setShowServerManagement(false)}
-                  subscription={subscription}
-                  subscriptionId={subscriptionId}
-                  selectedServers={selectedServersToUpdate}
-                  onSelectedServersChange={setSelectedServersToUpdate}
-                  purchaseOptions={purchaseOptions}
-                  isDark={isDark}
-                />
-              </div>
-            )}
-          </div>
-        )}
+          {/* Server Management - only in classic mode */}
+          {!isTariffsMode && (
+            <div className="mt-4">
+              <ServerManagementSheet
+                open={showServerManagement}
+                onOpen={() => setShowServerManagement(true)}
+                onClose={() => setShowServerManagement(false)}
+                subscription={subscription}
+                subscriptionId={subscriptionId}
+                selectedServers={selectedServersToUpdate}
+                onSelectedServersChange={setSelectedServersToUpdate}
+                purchaseOptions={purchaseOptions}
+                isDark={isDark}
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Reissue Subscription — standalone block, not dependent on device_limit */}
       {subscription &&
