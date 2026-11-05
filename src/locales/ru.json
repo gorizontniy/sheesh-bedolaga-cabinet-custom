@@ -445,7 +445,7 @@
       "DAY": "Сброс ежедневно",
       "WEEK": "Сброс еженедельно",
       "MONTH": "Сброс ежемесячно",
-      "MONTH_ROLLING": "Сброс раз в 30 дней"
+      "MONTH_ROLLING": "Сброс раз в месяц"
     },
     "traffic": "Трафик",
     "unlimited": "Безлимит",
@@ -6083,6 +6083,7 @@
           "deviceLimitTitle": "Лимит устройств",
           "deviceLimitHint": "Максимум по тарифу: {{max}}",
           "removePackage": "Убрать пакет",
+          "nextTrafficReset": "Следующий сброс трафика: {{date}}",
           "purchasedExtra": "докуплено {{gb}} ГБ",
           "periodDays": "{{count}} д",
           "noNodeUsage": "За этот период трафика по нодам не было",
@@ -6341,7 +6342,7 @@
             "deviceRename": "Переименование устройства",
             "countries": "Смена серверов",
             "pause": "Пауза подписки",
-            "refreshTraffic": "Сброс трафика",
+            "refreshTraffic": "Обновил трафик",
             "revoke": "Перевыпуск ключа",
             "tariffSwitch": "Смена тарифа",
             "autopay": "Настройка автопродления",

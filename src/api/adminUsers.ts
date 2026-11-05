@@ -207,6 +207,7 @@ export interface UserPanelInfo {
   online_at: string | null;
   last_connected_node_uuid: string | null;
   last_connected_node_name: string | null;
+  next_traffic_reset_at?: string | null;
 }
 
 export interface SubscriptionRequestRecord {

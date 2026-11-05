@@ -433,7 +433,7 @@
       "DAY": "Resets daily",
       "WEEK": "Resets weekly",
       "MONTH": "Resets monthly",
-      "MONTH_ROLLING": "Resets every 30 days"
+      "MONTH_ROLLING": "Resets monthly"
     },
     "traffic": "Traffic",
     "unlimited": "Unlimited",
@@ -6133,6 +6133,7 @@
           "deviceLimitTitle": "Device limit",
           "deviceLimitHint": "Plan maximum: {{max}}",
           "removePackage": "Remove package",
+          "nextTrafficReset": "Next traffic reset: {{date}}",
           "purchasedExtra": "{{gb}} GB purchased",
           "periodDays": "{{count}}d",
           "noNodeUsage": "No node traffic in this period",
@@ -6389,7 +6390,7 @@
             "deviceRename": "Device rename",
             "countries": "Server change",
             "pause": "Subscription pause",
-            "refreshTraffic": "Traffic reset",
+            "refreshTraffic": "Refreshed traffic",
             "revoke": "Key reissue",
             "tariffSwitch": "Tariff switch",
             "autopay": "Auto-renewal setting",

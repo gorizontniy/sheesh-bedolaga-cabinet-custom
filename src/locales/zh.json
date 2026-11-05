@@ -413,7 +413,7 @@
       "DAY": "每日重置",
       "WEEK": "每周重置",
       "MONTH": "每月重置",
-      "MONTH_ROLLING": "每30天重置"
+      "MONTH_ROLLING": "每月重置"
     },
     "traffic": "流量",
     "unlimited": "无限",
@@ -5022,6 +5022,7 @@
           "deviceLimitTitle": "设备上限",
           "deviceLimitHint": "套餐上限：{{max}}",
           "removePackage": "移除流量包",
+          "nextTrafficReset": "下次流量重置:{{date}}",
           "purchasedExtra": "已加购 {{gb}} GB",
           "periodDays": "{{count}}天",
           "noNodeUsage": "该时段没有节点流量",
@@ -5290,7 +5291,7 @@
             "deviceRename": "重命名设备",
             "countries": "更换服务器",
             "pause": "暂停订阅",
-            "refreshTraffic": "重置流量",
+            "refreshTraffic": "刷新流量",
             "revoke": "重新签发密钥",
             "tariffSwitch": "更换套餐",
             "autopay": "自动续费设置",

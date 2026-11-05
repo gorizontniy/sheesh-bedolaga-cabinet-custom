@@ -163,6 +163,7 @@ export interface Subscription extends TrafficAccountingSummary {
   tariff_id?: number;
   tariff_name?: string;
   traffic_reset_mode?: string;
+  next_traffic_reset_at?: string | null;
   /** Старая подписка (куплена в классике, тарифа нет, оператор на тарифах): продления и автоплатежа нет, только переход на тариф. */
   requires_tariff_selection?: boolean;
 }
