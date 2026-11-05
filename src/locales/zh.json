@@ -613,7 +613,7 @@
       "keepTerm": "已付费的到期日期保持不变。更换套餐不会延长订阅。",
       "toDailyTerm": "剩余已付费时长不会保留。更换后将每日扣费。",
       "fromDailyTerm": "更换时将收取新套餐最短可用周期的费用。",
-      "addonsNotice": "Devices above the new tariff limit are billed separately. Main traffic packages do not carry over, LTE packages stay. Registered devices are reset and re-register on the next connection.",
+      "addonsNotice": "Device places you paid for stay. Devices beyond them may need a surcharge. Main traffic packages do not carry over, LTE packages stay. Devices need to reconnect.",
       "totalNow": "本次应付",
       "balanceAfter": "更换后余额：{{amount}}",
       "confirm": "确认更换套餐",

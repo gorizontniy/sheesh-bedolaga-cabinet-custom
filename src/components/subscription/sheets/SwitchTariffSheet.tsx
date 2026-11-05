@@ -202,7 +202,9 @@ export function SwitchTariffSheet({
                   <div>
                     {target.device_limit === 0
                       ? t('lite.tariff.unlimitedDevices')
-                      : t('subscription.devices', { count: target.device_limit })}
+                      : t('subscription.devices', {
+                          count: switchPreview.new_device_limit ?? target.device_limit,
+                        })}
                   </div>
                 </dd>
               </div>

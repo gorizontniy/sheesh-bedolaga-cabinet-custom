@@ -859,6 +859,7 @@ export const subscriptionApi = {
     discount_kopeks?: number;
     /** Разбор доплаты: сколько из неё дал сам тариф, а сколько доп. устройства. */
     tariff_delta_kopeks?: number;
+    new_device_limit?: number;
     devices_delta_kopeks?: number;
   }> => {
     const response = await apiClient.post(
