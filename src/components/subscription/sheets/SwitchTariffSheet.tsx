@@ -257,7 +257,11 @@ export function SwitchTariffSheet({
             </p>
           )}
           <p className="text-xs leading-relaxed text-dark-400">
-            {t('subscription.switchTariff.addonsNotice')}
+            {t(
+              targetIsDaily
+                ? 'subscription.switchTariff.addonsNoticeDaily'
+                : 'subscription.switchTariff.addonsNotice',
+            )}
           </p>
 
           {/* Разбор доплаты. Переход «вниз» может стоить денег: тариф дешевле,

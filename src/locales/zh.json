@@ -614,6 +614,7 @@
       "forfeitWarning": "将失去的已付费天数:{{days}},价值约 {{amount}}。您的订阅已付费至 {{date}},更换后这段时间不会恢复。",
       "toDailyTerm": "剩余已付费时长不会保留。更换后将每日扣费。",
       "fromDailyTerm": "更换时将收取新套餐最短可用周期的费用。",
+      "addonsNoticeDaily": "已购买的设备名额和主流量包不会保留,LTE 流量包保留。您需要重新连接设备。",
       "addonsNotice": "Device places you paid for stay. Devices beyond them may need a surcharge. Main traffic packages do not carry over, LTE packages stay. Devices need to reconnect.",
       "totalNow": "本次应付",
       "balanceAfter": "更换后余额：{{amount}}",
