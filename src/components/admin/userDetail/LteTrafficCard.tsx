@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { uiLocale } from '@/utils/uiLocale';
 import type { UserSubscriptionInfo } from '@/api/adminUsers';
 import { formatPrice } from '@/utils/format';
 
@@ -55,7 +56,9 @@ export function LteTrafficCard({ sub, busy, canManage, onAdd, onRemove }: LteTra
                 <span className="text-xs text-dark-400">
                   {tp.is_expired
                     ? t('admin.users.detail.subscription.expired')
-                    : `${tp.days_remaining} ${t('admin.users.detail.subscription.daysLeft')}`}
+                    : `${tp.days_remaining} ${t('admin.users.detail.subscription.daysLeft')} · ${new Date(
+                        tp.expires_at,
+                      ).toLocaleDateString(uiLocale())}`}
                 </span>
                 <span className="text-xs text-dark-500">
                   {tp.source === 'admin'

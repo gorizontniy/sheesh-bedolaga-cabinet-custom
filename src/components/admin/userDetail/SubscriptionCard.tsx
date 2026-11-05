@@ -174,6 +174,13 @@ export function SubscriptionCard({
             </span>
           </div>
           <TrafficBar usedGb={usedGb} limitGb={sub.traffic_limit_gb} label={false} />
+          {panelInfo?.next_traffic_reset_at && (
+            <span className="text-xs text-dark-500" data-role="next-traffic-reset">
+              {t(`${ns}.nextTrafficReset`, {
+                date: new Date(panelInfo.next_traffic_reset_at).toLocaleDateString(uiLocale()),
+              })}
+            </span>
+          )}
           {sub.purchased_traffic_gb > 0 && (
             <span className="text-xs text-dark-500">
               {t(`${ns}.purchasedExtra`, { gb: formatGb(sub.purchased_traffic_gb) })}

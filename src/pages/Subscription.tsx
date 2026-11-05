@@ -73,7 +73,6 @@ function getSubscriptionLocationBadges(server: {
       { key: `${server.uuid}:de`, name: 'Германия', countryCode: 'DE' },
       { key: `${server.uuid}:fi`, name: 'Финляндия', countryCode: 'FI' },
       { key: `${server.uuid}:se`, name: 'Швеция', countryCode: 'SE' },
-      { key: `${server.uuid}:us`, name: 'США', countryCode: 'US' },
     ];
   }
 
@@ -741,8 +740,17 @@ export default function Subscription() {
                 </div>
                 {subscription.traffic_reset_mode &&
                   subscription.traffic_reset_mode !== 'NO_RESET' && (
-                    <div className="mb-2 text-[10px] text-dark-400">
-                      {t(`subscription.trafficReset.${subscription.traffic_reset_mode}`)}
+                    <div className="mb-2 flex items-center justify-between gap-2 text-[10px] text-dark-400">
+                      <span>
+                        {t(`subscription.trafficReset.${subscription.traffic_reset_mode}`)}
+                      </span>
+                      {subscription.next_traffic_reset_at && (
+                        <span className="shrink-0 tabular-nums" data-role="next-traffic-reset">
+                          {new Date(subscription.next_traffic_reset_at).toLocaleDateString(
+                            uiLocale(),
+                          )}
+                        </span>
+                      )}
                     </div>
                   )}
                 {unknownTraffic ? (

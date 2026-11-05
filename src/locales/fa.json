@@ -425,7 +425,7 @@
       "DAY": "بازنشانی روزانه",
       "WEEK": "بازنشانی هفتگی",
       "MONTH": "بازنشانی ماهانه",
-      "MONTH_ROLLING": "بازنشانی هر ۳۰ روز"
+      "MONTH_ROLLING": "بازنشانی ماهانه"
     },
     "traffic": "ترافیک",
     "unlimited": "نامحدود",
@@ -5078,6 +5078,7 @@
           "deviceLimitTitle": "محدودیت دستگاه",
           "deviceLimitHint": "حداکثر تعرفه: {{max}}",
           "removePackage": "حذف بسته",
+          "nextTrafficReset": "بازنشانی بعدی ترافیک: {{date}}",
           "purchasedExtra": "{{gb}} گیگ خریداری‌شده",
           "periodDays": "{{count}} روز",
           "noNodeUsage": "در این بازه ترافیکی روی نودها نبود",
@@ -5348,7 +5349,7 @@
             "deviceRename": "تغییر نام دستگاه",
             "countries": "تغییر سرورها",
             "pause": "توقف اشتراک",
-            "refreshTraffic": "بازنشانی ترافیک",
+            "refreshTraffic": "به‌روزرسانی ترافیک",
             "revoke": "صدور مجدد کلید",
             "tariffSwitch": "تغییر تعرفه",
             "autopay": "تنظیم تمدید خودکار",
