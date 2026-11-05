@@ -248,6 +248,17 @@ export function SwitchTariffSheet({
               })}
             </p>
           )}
+          {switchPreview.traffic_over_limit && (
+            <p
+              role="alert"
+              className="rounded-lg border border-warning-500/40 bg-warning-500/10 p-3 text-sm text-dark-100"
+            >
+              {t('subscription.switchTariff.trafficOverLimit', {
+                used: switchPreview.traffic_over_limit.used_gb,
+                limit: switchPreview.traffic_over_limit.limit_gb,
+              })}
+            </p>
+          )}
           {targetIsDaily && dailyQuote && (
             <p className="text-sm text-dark-300">
               {t('subscription.switchTariff.dailyPayment')}:{' '}
@@ -301,6 +312,16 @@ export function SwitchTariffSheet({
                     {formatPrice(Math.abs(switchPreview.devices_delta_kopeks ?? 0))}
                   </span>
                 </div>
+                {(switchPreview.tariff_discount_percent ?? 0) +
+                  (switchPreview.devices_discount_percent ?? 0) >
+                  0 && (
+                  <p className="pt-1 text-dark-400">
+                    {t('subscription.switchTariff.groupDiscounts', {
+                      tariff: switchPreview.tariff_discount_percent ?? 0,
+                      devices: switchPreview.devices_discount_percent ?? 0,
+                    })}
+                  </p>
+                )}
               </div>
             )}
 

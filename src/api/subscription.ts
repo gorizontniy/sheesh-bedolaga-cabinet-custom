@@ -862,6 +862,10 @@ export const subscriptionApi = {
     new_device_limit?: number;
     devices_delta_kopeks?: number;
     /** Переход на суточный: оплаченные дни, которые не перенесутся, и их примерная стоимость. */
+    tariff_discount_percent?: number;
+    devices_discount_percent?: number;
+    /** Расход уже больше лимита нового тарифа: счётчик при смене не обнуляется. */
+    traffic_over_limit?: { used_gb: number; limit_gb: number };
     forfeited_days?: number;
     forfeited_value_kopeks?: number;
   }> => {
