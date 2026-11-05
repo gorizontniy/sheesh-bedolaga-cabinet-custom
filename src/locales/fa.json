@@ -636,6 +636,7 @@
       "newLimits": "محدودیت‌های طرح جدید",
       "endDate": "تاریخ انقضا",
       "keepTerm": "تاریخ انقضای پرداخت‌شده حفظ می‌شود. تغییر طرح، اشتراک را تمدید نمی‌کند.",
+      "forfeitWarning": "روزهای پرداخت‌شده‌ای که از دست می‌دهید: {{days}}، به ارزش حدود {{amount}}. اشتراک شما تا {{date}} پرداخت شده است و پس از تغییر، این زمان بازنمی‌گردد.",
       "toDailyTerm": "زمان پرداخت‌شده باقی‌مانده منتقل نمی‌شود. پس از تغییر، هزینه به‌صورت روزانه کسر می‌شود.",
       "fromDailyTerm": "هنگام تغییر، هزینه کوتاه‌ترین دوره موجود طرح جدید دریافت می‌شود.",
       "addonsNotice": "Device places you paid for stay. Devices beyond them may need a surcharge. Main traffic packages do not carry over, LTE packages stay. Devices need to reconnect.",

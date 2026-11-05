@@ -861,6 +861,9 @@ export const subscriptionApi = {
     tariff_delta_kopeks?: number;
     new_device_limit?: number;
     devices_delta_kopeks?: number;
+    /** Переход на суточный: оплаченные дни, которые не перенесутся, и их примерная стоимость. */
+    forfeited_days?: number;
+    forfeited_value_kopeks?: number;
   }> => {
     const response = await apiClient.post(
       '/cabinet/subscription/tariff/switch/preview',

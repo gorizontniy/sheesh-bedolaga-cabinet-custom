@@ -236,6 +236,18 @@ export function SwitchTariffSheet({
               )}
             </p>
           )}
+          {subscription && targetIsDaily && (switchPreview.forfeited_days ?? 0) > 0 && (
+            <p
+              role="alert"
+              className="rounded-lg border border-warning-500/40 bg-warning-500/10 p-3 text-sm text-dark-100"
+            >
+              {t('subscription.switchTariff.forfeitWarning', {
+                days: switchPreview.forfeited_days,
+                amount: formatPrice(switchPreview.forfeited_value_kopeks ?? 0),
+                date: formatLiteDate(subscription.end_date),
+              })}
+            </p>
+          )}
           {targetIsDaily && dailyQuote && (
             <p className="text-sm text-dark-300">
               {t('subscription.switchTariff.dailyPayment')}:{' '}
