@@ -638,7 +638,7 @@
       "keepTerm": "تاریخ انقضای پرداخت‌شده حفظ می‌شود. تغییر طرح، اشتراک را تمدید نمی‌کند.",
       "toDailyTerm": "زمان پرداخت‌شده باقی‌مانده منتقل نمی‌شود. پس از تغییر، هزینه به‌صورت روزانه کسر می‌شود.",
       "fromDailyTerm": "هنگام تغییر، هزینه کوتاه‌ترین دوره موجود طرح جدید دریافت می‌شود.",
-      "addonsNotice": "دستگاه‌ها و بسته‌های ترافیک اضافه منتقل نمی‌شوند. با تغییر طرح، دستگاه‌های ثبت‌شده بازنشانی می‌شوند.",
+      "addonsNotice": "Devices above the new tariff limit are billed separately. Main traffic packages do not carry over, LTE packages stay. Registered devices are reset and re-register on the next connection.",
       "totalNow": "مبلغ قابل پرداخت اکنون",
       "balanceAfter": "موجودی پس از تغییر: {{amount}}",
       "confirm": "تأیید تغییر طرح",
